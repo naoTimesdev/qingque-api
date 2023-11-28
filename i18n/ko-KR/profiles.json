@@ -1,0 +1,31 @@
+{
+    "achivements": "업적",
+    "light_cones": "광추",
+    "rogue": "시뮬레이션 우주",
+    "rogue_world": "제{0}세계",
+    "rogue_locust": "곤충 떼 재난",
+    "abyss": "망각의 정원",
+    "abyss_hard": "혼돈의 기억",
+    "character_header": "{0} (Lv. {1})",
+    "tb_power": "개척력",
+    "tb_power_recover": "({0}만에 회복)",
+    "tb_power_reserve": "예비 력",
+    "echo_of_war": "전쟁의 여운",
+    "daily_quest": "일일 훈련",
+    "assignment": {
+        "title": "의뢰 {0}",
+        "name": "이름",
+        "status": {
+            "title": "상태",
+            "ongoing": "진행 중",
+            "completed": "완료"
+        },
+        "finish": "에 끝났다"
+    },
+    "chronicle_titles": {
+        "overview": "전적",
+        "rogue": "전적 — 시뮬레이션 우주",
+        "abyss": "전적 — 혼돈의 기억",
+        "rogue_locust": "전적 — 시뮬레이션 우주: 곤충 떼 재난"
+    }
+}

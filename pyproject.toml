@@ -1,0 +1,140 @@
+[tool.poetry]
+name = "qingque-api"
+version = "0.1.0"
+description = "An API companion for Qingque bot"
+authors = ["noaione <noaione0809@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+blacksheep = {extras = ["full"], version = "^2.0.0"}
+uvicorn = "^0.24.0.post1"
+essentials-configuration = {extras = ["full"], version = "^2.0.3"}
+MarkupSafe = "2.1.3"
+aiopath = "0.6.11"
+Pillow = "10.1.0"
+msgspec = {extras = ["toml"], version = "0.18.4"}
+coloredlogs = "^15.0.1"
+orjson = "^3.9.10"
+yarl = "^1.9.3"
+aiohttp = "^3.9.1"
+babel = "^2.13.1"
+redis = {extras = ["hiredis"], version = "^5.0.1"}
+uvloop = {version = "^0.19.0", platform = "linux"}
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.1.6"
+isort = "^5.12.0"
+black = "^23.11.0"
+colorthief = "^0.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+ignore = [
+    "E203",
+    "F405",
+    "F403",
+    "F722",
+    "N806",
+    "COM812",
+    "D400",  # first line should be period, most of my docstring will be LICENSE header so no thanks
+    "D202",
+    "D401",
+    "N818",  # error
+]
+line-length = 120
+extend-exclude = [
+    "env",
+    "venv",
+    ".pytest_cache",
+    ".venv",
+    "__pycache__",
+    ".git",
+    ".mypy_cache",
+    ".vscode",
+    ".ruff_cache",
+    "**/Lib/**",
+    "dist",
+    "build",
+    "built",
+]
+ignore-init-module-imports = true
+target-version = "py310"
+select = [
+    "E",
+    "F",
+    "W",
+    "I",
+    "N",
+    "S",
+    "B",
+    "T",
+    "Q",
+    # "D",
+    "RUF",
+    "COM",
+    "CPY",
+    "PTH",
+    "ASYNC",
+]
+src = ["app", "domain", "tests", "qutils"]
+
+[tool.ruff.pydocstyle]
+convention = "numpy"
+ignore-decorators = ["typing.overload"]
+
+[tool.ruff.isort]
+combine-as-imports = false
+split-on-trailing-comma = true
+required-imports = ["from __future__ import annotations"]
+known-first-party = ["tests", "app", "domain", "qutils"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401", "F403", "I002", "D205"]
+"tests/*.py" = ["S101", "I002", "D"]  # assert statement used in pytest
+"pipelines/*" = ["T", "I", "S603", "D"]
+"_metadata.py" = ["I002"]
+"migrations/*" = ["T201"]
+
+[tool.black]
+line-length = 120
+target-version = ["py310"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | venv
+  | env
+  | _build
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+extend_skip = ["env/**", "venv/**", ".pytest_cache/**", ".venv/**", "__pycache__/**", "build", "built"]
+line_length = 110
+skip_gitignore = false
+combine_as_imports = false
+
+[tool.pyright]
+include = ["app", "domain", "tests", "qutils"]
+exclude = ["venv", "env", "node_modules", ".venv", ".env", ".nox", ".pytest_cache", ".mypy_cache", ".tox", "build", "dist", "_build", "**/__pycache__", "build", "built"]
+ignore = ["_testing"]
+stubPath = "./stubs"
+
+reportMissingImports = true
+venv = "."
+
+pythonVersion = "3.10"

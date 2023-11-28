@@ -1,0 +1,31 @@
+{
+    "achivements": "Succès",
+    "light_cones": "Cônes de lumière",
+    "rogue": "Univers simulé",
+    "rogue_world": "Monde {0}",
+    "rogue_locust": "Le Désastre de l'Essaim",
+    "abyss": "Salle oubliée",
+    "abyss_hard": "Mémoire du Chaos",
+    "character_header": "{0} (Niv. {1})",
+    "tb_power": "Puissance du pionnier",
+    "tb_power_recover": "(Récupérer {0})",
+    "tb_power_reserve": "Puissance de Réserve",
+    "echo_of_war": "Écho de la guerre",
+    "daily_quest": "Entraînement quotidien",
+    "assignment": {
+        "title": "Affectations {0}",
+        "name": "Nom",
+        "status": {
+            "title": "Statuts",
+            "ongoing": "En cours",
+            "completed": "Terminé"
+        },
+        "finish": "Terminer à"
+    },
+    "chronicle_titles": {
+        "overview": "Registre des combats",
+        "rogue": "Registre des combats — Univers simulé",
+        "abyss": "Registre des combats — Mémoire du Chaos",
+        "rogue_locust": "Registre des combats — Univers simulé: Le Désastre de l'Essaim"
+    }
+}

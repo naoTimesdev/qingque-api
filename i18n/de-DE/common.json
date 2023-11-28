@@ -1,0 +1,22 @@
+{
+    "region": {
+        "short": {
+            "china": "China",
+            "na": "NA",
+            "eur": "EU",
+            "asia": "Asien",
+            "taiwan": "TW/HK/MO"
+        },
+        "long": {
+            "china": "Festland China",
+            "na": "Nord-Amerika",
+            "eur": "Europa",
+            "asia": "Asien",
+            "taiwan": "Taiwan/Hongkong/Macau"
+        }
+    },
+    "game_kind": {
+        "starrail": "Honkai: Star Rail"
+    },
+    "moc_floor": "Ebene {0}"
+}

@@ -1,0 +1,31 @@
+{
+    "achivements": "ความสำเร็จ",
+    "light_cones": "Light Cones",
+    "rogue": "Simulated Universe",
+    "rogue_world": "โลก {0}",
+    "rogue_locust": "Swarm Disaster",
+    "abyss": "Forgotten Hall",
+    "abyss_hard": "Memory of Chaos",
+    "character_header": "{0} (Lv. {1})",
+    "tb_power": "พลังบุกเบิก",
+    "tb_power_recover": "(Recover {0})",
+    "tb_power_reserve": "พลังสำรอง",
+    "echo_of_war": "Echo of War",
+    "daily_quest": "การฝึกประจำวัน",
+    "assignment": {
+        "title": "คำขอ {0}",
+        "name": "สถานะ",
+        "status": {
+            "title": "สถานะ",
+            "ongoing": "ดำเนินการอยู่",
+            "completed": "เสร็จสมบูรณ์"
+        },
+        "finish": "เสร็จสิ้นเมื่อ"
+    },
+    "chronicle_titles": {
+        "overview": "สถิติ",
+        "rogue": "สถิติ — Simulated Universe",
+        "abyss": "สถิติ — Memory of Chaos",
+        "rogue_locust": "Battle Chronicles — Simulated Universe: Swarm Disaster"
+    }
+}

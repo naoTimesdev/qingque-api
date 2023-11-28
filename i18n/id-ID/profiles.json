@@ -1,0 +1,31 @@
+{
+    "achivements": "Pencapaian",
+    "light_cones": "Light Cones",
+    "rogue": "Simulated Universe",
+    "rogue_world": "Dunia {0}",
+    "rogue_locust": "Bencana Swarm",
+    "abyss": "Forgotten Hall",
+    "abyss_hard": "Memory of Chaos",
+    "character_header": "{0} (Lv. {1})",
+    "tb_power": "Trailblaze Power",
+    "tb_power_recover": "(Pulih {0})",
+    "tb_power_reserve": "Power Cadangan",
+    "echo_of_war": "Echo of War",
+    "daily_quest": "Pelatihan Harian",
+    "assignment": {
+        "title": "Tugas {0}",
+        "name": "Nama",
+        "status": {
+            "title": "Status",
+            "ongoing": "Diproses",
+            "completed": "Selesai"
+        },
+        "finish": "Selesai pada"
+    },
+    "chronicle_titles": {
+        "overview": "Jurnal Petualangan",
+        "rogue": "Jurnal Petualangan — Simulated Universe",
+        "abyss": "Jurnal Petualangan — Memory of Chaos",
+        "rogue_locust": "Jurnal Petualangan — Simulated Universe: Bencana Swarm"
+    }
+}

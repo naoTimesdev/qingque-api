@@ -1,0 +1,31 @@
+{
+    "achivements": "成就",
+    "light_cones": "光錐",
+    "rogue": "模擬宇宙",
+    "rogue_world": "第{0}世界",
+    "rogue_locust": "寰宇蝗災",
+    "abyss": "忘卻之庭",
+    "abyss_hard": "第七世界",
+    "character_header": "{0} ({1}級)",
+    "tb_power": "開拓力",
+    "tb_power_recover": "({0}恢復)",
+    "tb_power_reserve": "後備力",
+    "echo_of_war": "歷戰餘響",
+    "daily_quest": "每日實訓",
+    "assignment": {
+        "title": "委託{0}",
+        "name": "名稱",
+        "status": {
+            "title": "狀態",
+            "ongoing": "持續",
+            "completed": "已完成"
+        },
+        "finish": "結束於"
+    },
+    "chronicle_titles": {
+        "overview": "戰績",
+        "rogue": "戰績 — 模擬宇宙",
+        "abyss": "戰績 — 混沌回憶",
+        "rogue_locust": "戰績 — 模擬宇宙: 寰宇蝗災"
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "region": {
+        "short": {
+            "china": "中国",
+            "na": "NA",
+            "eur": "EU",
+            "asia": "アジア",
+            "taiwan": "TW/HK/MO"
+        },
+        "long": {
+            "china": "中国大陸",
+            "na": "北アメリカ",
+            "eur": "ヨーロッパ",
+            "asia": "アジア",
+            "taiwan": "台湾/香港/マカオ"
+        }
+    },
+    "game_kind": {
+        "starrail": "崩壊: スターレイル"
+    },
+    "moc_floor": "{0}層"
+}

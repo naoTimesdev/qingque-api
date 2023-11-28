@@ -1,0 +1,22 @@
+{
+    "region": {
+        "short": {
+            "china": "จีน",
+            "na": "NA",
+            "eur": "EU",
+            "asia": "เอเชีย",
+            "taiwan": "TW/HK/MO"
+        },
+        "long": {
+            "china": "จีนแผ่นดินใหญ่",
+            "na": "อเมริกาเหนือ",
+            "eur": "ยุโรป",
+            "asia": "เอเชีย",
+            "taiwan": "ไต้หวัน/ฮ่องกง/มาเก๊า"
+        }
+    },
+    "game_kind": {
+        "starrail": "Honkai: Star Rail"
+    },
+    "moc_floor": "ชั้นที่ {0}"
+}

@@ -1,0 +1,10 @@
+[app]
+show_error_details = false
+
+[redis]
+host = "127.0.0.1"
+port = 6379
+
+[hoyolab]
+ltuid = 00000000
+ltoken = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"

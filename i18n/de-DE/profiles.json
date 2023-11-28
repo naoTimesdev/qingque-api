@@ -1,0 +1,31 @@
+{
+    "achivements": "Erfolge",
+    "light_cones": "Lichtkegel",
+    "rogue": "Universum-Simulation",
+    "rogue_world": "Welt {0}",
+    "rogue_locust": "Schwarmkatastrophe",
+    "abyss": "Vergessene Halle",
+    "abyss_hard": "Chaos-Erinnerung",
+    "character_header": "{0} (Lv. {1})",
+    "tb_power": "Trailblaze-Kraft",
+    "tb_power_recover": "(Wiederherstellen {0})",
+    "tb_power_reserve": "Reservekraft",
+    "echo_of_war": "Echo des Krieges",
+    "daily_quest": "Tägliches Training",
+    "assignment": {
+        "title": "Aufträge {0}",
+        "name": "Name",
+        "status": {
+            "title": "Status",
+            "ongoing": "Laufend",
+            "completed": "Abgeschlossen"
+        },
+        "finish": "Beenden um"
+    },
+    "chronicle_titles": {
+        "overview": "Kampferfolge",
+        "rogue": "Kampferfolge — Universum-Simulation",
+        "abyss": "Kampferfolge — Chaos-Erinnerung",
+        "rogue_locust": "Kampferfolge — Universum-Simulation: Schwarmkatastrophe"
+    }
+}

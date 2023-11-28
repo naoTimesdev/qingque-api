@@ -1,0 +1,22 @@
+{
+    "region": {
+        "short": {
+            "china": "中國",
+            "na": "NA",
+            "eur": "EU",
+            "asia": "亞洲",
+            "taiwan": "TW/HK/MO"
+        },
+        "long": {
+            "china": "中國大陸",
+            "na": "北美洲",
+            "eur": "歐洲",
+            "asia": "亞洲",
+            "taiwan": "台灣/香港/澳門"
+        }
+    },
+    "game_kind": {
+        "starrail": "崩壞: 星穹鐵道"
+    },
+    "moc_floor": "{0}層"
+}

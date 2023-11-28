@@ -1,0 +1,31 @@
+{
+    "achivements": "Thành Tựu",
+    "light_cones": "Nón Ánh Sáng",
+    "rogue": "Vũ Trụ Mô Phỏng",
+    "rogue_world": "Thế Giới {0}",
+    "rogue_locust": "Swarm Disaster",
+    "abyss": "Sảnh Đường Lãng Quên",
+    "abyss_hard": "Dư Âm Chiến Đấu",
+    "character_header": "{0} (Cấp {1})",
+    "tb_power": "Sức Mạnh Khai Phá",
+    "tb_power_recover": "(Sự hồi phục {0})",
+    "tb_power_reserve": "Sức Mạnh Dự Bị",
+    "echo_of_war": "Dư Âm Chiến Đấu",
+    "daily_quest": "Huấn Luyện Mỗi Ngày",
+    "assignment": {
+        "title": "Ủy Thác {0}",
+        "name": "Tên",
+        "status": {
+            "title": "Trạng Thái",
+            "ongoing": "Đang thực hiện",
+            "completed": "Hoàn thành"
+        },
+        "finish": "Kết thúc lúc"
+    },
+    "chronicle_titles": {
+        "overview": "Chiến Tích",
+        "rogue": "Chiến Tích — Vũ Trụ Mô Phỏng",
+        "abyss": "Chiến Tích — Dư Âm Chiến Đấu",
+        "rogue_locust": "Battle Chronicles — Simulated Universe: Swarm Disaster"
+    }
+}

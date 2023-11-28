@@ -1,0 +1,22 @@
+{
+    "region": {
+        "short": {
+            "china": "중국",
+            "na": "북미",
+            "eur": "유럽",
+            "asia": "아시아",
+            "taiwan": "대만/홍콩/마카오"
+        },
+        "long": {
+            "china": "중국 본토",
+            "na": "북미",
+            "eur": "유럽",
+            "asia": "아시아",
+            "taiwan": "대만/홍콩/마카오"
+        }
+    },
+    "game_kind": {
+        "starrail": "붕괴: 스타레일"
+    },
+    "moc_floor": "{0}층"
+}
