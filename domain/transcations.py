@@ -37,6 +37,7 @@ from domain.redisdb import RedisDatabase
 __all__ = (
     "TransactionHoyolab",
     "TransactionsHelper",
+    "TransactionCacheKind",
 )
 
 
@@ -56,6 +57,31 @@ class TransactionHoyolab(Struct):
 class TransactionMihomo(Struct):
     uid: int
     cached: MihomoPlayer
+
+
+class TransactionCacheKind:
+    MIHOMO = "mihomo"
+    MIHOMO_PLAYER = "mihomo:player"
+    HY_CHRONICLES = "hoyolab:chronicles"
+    HY_MOC = "hoyolab:moc"
+    HY_SIMUNIVERSE = "hoyolab:simulated_universe"
+
+    @classmethod
+    def is_valid(cls, kind: str) -> bool:
+        return kind in (
+            cls.MIHOMO,
+            cls.MIHOMO_PLAYER,
+            cls.HY_CHRONICLES,
+            cls.HY_MOC,
+            cls.HY_SIMUNIVERSE,
+        )
+
+    @classmethod
+    def make(cls, kind: str, extra_meta: str | None = None) -> str:
+        if not cls.is_valid(kind):
+            raise ValueError(f"Invalid cache kind: {kind}")
+
+        return f"{kind}:{extra_meta}" if extra_meta else kind
 
 
 TransT = TypeVar("TransT", bound=Struct)
@@ -78,3 +104,12 @@ class TransactionsHelper:
         token = secrets.token_hex(32)
         await self._redis.setex(f"{self.KEY}:{token}", transaction, ttl)
         return token
+
+    async def get_gen_cache(self, token: str, cache_type: str) -> bytes | None:
+        """Get a cache from the database."""
+        data = await self._redis.get(f"{self.KEY}:{token}:{cache_type}")
+        return data
+
+    async def set_gen_cache(self, token: str, cache_type: str, data: bytes, *, ttl: int) -> None:
+        """Set a cache in the database."""
+        await self._redis.setex(f"{self.KEY}:{token}:{cache_type}", data, expires=ttl)

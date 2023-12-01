@@ -54,6 +54,8 @@ class App(Struct):
     transaction_ttl: int = field(default=60 * 60 * 24 * 3)
     # Cache mihomo data for 5 minutes
     mihomo_ttl: int = field(default=60 * 5)
+    # Cache for image, 3 minutes
+    image_ttl: int = field(default=60 * 3)
 
 
 class Settings(Struct):
@@ -75,7 +77,7 @@ class Settings(Struct):
             hoyolab=HoyolabSettings(**hoyolab),
             redis=RedisSettings(**redis),
             info=APIInfo(**info),
-            env=kwargs["env"],
+            env=kwargs.get("env", "production"),
         )
 
 

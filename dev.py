@@ -4,13 +4,16 @@ application for production.
 
 Refer to https://www.uvicorn.org/deployment/ for production deployments.
 """
+
+from __future__ import annotations
+
 import os
 
 import uvicorn
 from rich.console import Console
 
 try:
-    import uvloop
+    import uvloop  # type: ignore
 except ModuleNotFoundError:
     pass
 else:

@@ -34,13 +34,15 @@ from blacksheep.server.controllers import Controller, get
 from app.settings import Settings
 from domain.i18n import QingqueI18n, QingqueLanguage
 from domain.mihomo.client import MihomoAPI
+from domain.mihomo.models.characters import Character
 from domain.mihomo.models.player import Player
 from domain.starrail.caching import StarRailImageCache
 from domain.starrail.generator.mihomo import StarRailMihomoCard
 from domain.starrail.generator.player import StarRailPlayerCard
 from domain.starrail.loader import SRSDataLoaderI18n
 from domain.starrail.scoring import RelicScoring
-from domain.transcations import TransactionMihomo, TransactionsHelper
+from domain.transcations import TransactionCacheKind, TransactionMihomo, TransactionsHelper
+from qutils.tooling import get_logger
 
 
 @dataclass
@@ -69,6 +71,8 @@ class MihomoCharactersGenerator(Controller):
         self.transactions = transactions
         self.relic_scores = relic_scores
 
+        self.logger = get_logger("qingque.controllers.mihomo.characters")
+
     @classmethod
     def route(cls) -> str | None:
         return "/api/mihomo/profile"
@@ -76,6 +80,23 @@ class MihomoCharactersGenerator(Controller):
     @classmethod
     def class_name(cls) -> str:
         return "Generator"
+
+    def _make_cache_key(self, character: Character, lang: QingqueLanguage, detailed: bool):
+        mode = "_detailed" if detailed else ""
+        return f"{character.id}_{lang.name}{mode}"
+
+    def _make_response(self, filename: str, data: bytes):
+        return Response(
+            200,
+            headers=[
+                (b"Content-Disposition", f"inline; filename={filename}".encode("utf-8")),
+                (b"Cache-Control", b"max-age=300, must-revalidate"),
+            ],
+            content=Content(
+                b"image/png",
+                data=data,
+            ),
+        )
 
     @get()
     async def create(
@@ -102,6 +123,10 @@ class MihomoCharactersGenerator(Controller):
             uid = cached.uid
             data = cached.cached
 
+        self.logger.info(f"Generating player card for {uid}...")
+        if token is not None:
+            self.logger.info(f"Using token {token}")
+
         if uid is not None and data is None:
             try:
                 data, _ = await self.mihomo.get_player(uid)
@@ -117,6 +142,20 @@ class MihomoCharactersGenerator(Controller):
         except IndexError:
             return json(ErrorResponse(400, "Invalid character"), 400)
 
+        filename = f"{uid}_{character_sel.id}_Card{q_lang.name}.Qingque.png"
+        cache_meta = self._make_cache_key(character_sel, q_lang, detailed)
+        cache_key = TransactionCacheKind.make(
+            TransactionCacheKind.MIHOMO,
+            extra_meta=cache_meta,
+        )
+
+        if token is not None:
+            self.logger.info(f"Checking cache for: {token} (with key: {cache_key})")
+            cached = await self.transactions.get_gen_cache(token, cache_type=cache_key)
+            if cached is not None:
+                self.logger.info(f"Found cache for: {token} (with key: {cache_key})")
+                return self._make_response(filename, cached)
+
         mihomo_gen = StarRailMihomoCard(
             character=character_sel,
             player=data.player,
@@ -129,21 +168,12 @@ class MihomoCharactersGenerator(Controller):
 
         results = await mihomo_gen.create(clear_cache=False, hide_credits=True, detailed=detailed)
 
-        filename = f"{uid}_{character_sel.id}_Card{q_lang.name}.Qingque.png"
-
-        # Cache response for 5 minutes
+        # Cache response for 3 minutes
+        if token is not None:
+            self.logger.info(f"Setting cache for: {token} (with key: {cache_key})")
+            await self.transactions.set_gen_cache(token, cache_key, results, ttl=self.settings.app.image_ttl)
         # Results is PNG bytes
-        return Response(
-            200,
-            headers=[
-                (b"Content-Disposition", f"inline; filename={filename}".encode("utf-8")),
-                (b"Cache-Control", b"max-age=300, must-revalidate"),
-            ],
-            content=Content(
-                b"image/png",
-                data=results,
-            ),
-        )
+        return self._make_response(filename, results)
 
 
 class MihomoProfileGenerator(Controller):
@@ -164,6 +194,8 @@ class MihomoProfileGenerator(Controller):
         self.mihomo = mihomo
         self.transactions = transactions
         self.relic_scores = relic_scores
+
+        self.logger = get_logger("qingque.controllers.mihomo.player")
 
     @classmethod
     def route(cls) -> str | None:
@@ -196,6 +228,10 @@ class MihomoProfileGenerator(Controller):
             uid = cached.uid
             data = cached.cached
 
+        self.logger.info(f"Generating player card for {uid}...")
+        if token is not None:
+            self.logger.info(f"Using token {token}")
+
         if uid is not None and data is None:
             try:
                 data, _ = await self.mihomo.get_player(uid)
@@ -205,6 +241,30 @@ class MihomoProfileGenerator(Controller):
 
         if data is None:
             return json(ErrorResponse(400, "Invalid uid"), 400)
+
+        filename = f"PlayerCard{q_lang.name}_{uid}.Qingque.png"
+        if token is not None:
+            self.logger.info(f"Checking cache for: {token} {TransactionCacheKind.MIHOMO_PLAYER}")
+            cached = await self.transactions.get_gen_cache(
+                token,
+                cache_type=TransactionCacheKind.MIHOMO_PLAYER,
+            )
+            if cached is not None:
+                self.logger.info(f"Found cache for: {token} {TransactionCacheKind.MIHOMO_PLAYER}")
+                return Response(
+                    200,
+                    headers=[
+                        (
+                            b"Content-Disposition",
+                            f"inline; filename={filename}".encode("utf-8"),
+                        ),
+                        (b"Cache-Control", b"public, max-age=600"),
+                    ],
+                    content=Content(
+                        b"image/png",
+                        data=cached,
+                    ),
+                )
 
         mihomo_gen = StarRailPlayerCard(
             player=data,
@@ -216,7 +276,14 @@ class MihomoProfileGenerator(Controller):
 
         results = await mihomo_gen.create(clear_cache=False)
 
-        filename = f"PlayerCard{q_lang.name}_{uid}.Qingque.png"
+        if token is not None:
+            self.logger.info(f"Setting cache for: {token} {TransactionCacheKind.MIHOMO_PLAYER}")
+            await self.transactions.set_gen_cache(
+                token,
+                TransactionCacheKind.MIHOMO_PLAYER,
+                results,
+                ttl=self.settings.app.image_ttl,
+            )
 
         # Cache response for 10 minutes
         # Results is PNG bytes

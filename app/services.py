@@ -98,14 +98,17 @@ def configure_services(settings: Settings) -> tuple[Container, Settings]:
 
     container = Container()
 
+    logger.info("Configuring services...")
     i18n = QingqueI18n(i18n_path)
     mihomo = MihomoAPI()
     hylab = HYLabClient(settings.hoyolab.ltuid, settings.hoyolab.ltoken)
+    logger.info("Connecting to Redis...")
     redis = RedisDatabase(settings.redis.host, settings.redis.port, settings.redis.password)
     transactions = TransactionsHelper(redis=redis)
+    logger.info("Loading SRS assets...")
     srs_cache = _preload_srs_assets()
     srs_i18n = _load_srs_data()
-    logger.debug("Loading relic scores...")
+    logger.info("Loading relic scores...")
     relic_scores = RelicScoring(Path(ROOT_DIR / "assets" / "relic_scores.json"))
     relic_scores.load()
 

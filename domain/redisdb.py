@@ -88,7 +88,7 @@ class RedisDatabase:
             kwargs["password"] = self._pass
         self._pool = aioredis.ConnectionPool.from_url(url=address, **kwargs)
         self._conn = aioredis.Redis(connection_pool=self._pool)
-        self.logger = logging.getLogger("Showtimes.Controllers.Redis")
+        self.logger = logging.getLogger("qingque.domain.redis")
         self._is_connected = False
 
         self._need_execution = []
@@ -132,7 +132,7 @@ class RedisDatabase:
         """:class:`aioredis.ConnectionPool`: Returns the connection pool."""
         return self._pool
 
-    def stringify(self, data: Any) -> str:
+    def stringify(self, data: Any) -> str | bytes:
         """Stringify `data`
 
         :param data: data to be turn into a string
@@ -141,15 +141,15 @@ class RedisDatabase:
         :rtype: str
         """
         if isinstance(data, bytes):
-            data = data.decode("utf-8")
-            # Prepend magic code
-            data = "b2dntcode_" + data
+            return data
         elif isinstance(data, int):
             data = str(data)
         elif isinstance(data, Struct):
             data = msgspec.json.encode(data)
         elif isinstance(data, (list, tuple, dict)):
-            data = orjson.dumps(data).decode("utf-8")
+            data = orjson.dumps(data)
+        elif isinstance(data, str):
+            data = f"STRING_MODE_{data}".encode("utf-8")
         return data
 
     @staticmethod
@@ -179,15 +179,19 @@ class RedisDatabase:
         """
         if data is None:
             return None
-        parsed = data.decode("utf-8")
+        if data.startswith(b"STRING_MODE_"):
+            data = data[12:]
+            return data.decode("utf-8")
+        try:
+            parsed = data.decode("utf-8")
+        except UnicodeDecodeError:
+            self.logger.warning("Failed to decode data, using original data")
+            return data
         _float_parse = self._try_float(parsed)
         if isinstance(_float_parse, (float, int)):
             return _float_parse
         if parsed.isdigit():
             return int(parsed, 10)
-        if parsed.startswith("b2dntcode_"):
-            parsed = parsed[10:]
-            return parsed.encode("utf-8")
         if type is not None:
             try:
                 parsed = msgspec.json.decode(parsed, type=type)
@@ -367,12 +371,12 @@ class RedisDatabase:
         """
         if self._is_stopping:
             return False
+        res = False
         async with self.lock_env("set"):
             try:
                 res = await self._conn.set(key, self.stringify(data))
             except aioredis.RedisError as e:
                 self.logger.debug(f"Failed to set {key}", exc_info=e)
-                res = False
         return res or False
 
     async def setex(self, key: str, data: Any, expires: int) -> bool:
@@ -389,12 +393,15 @@ class RedisDatabase:
         """
         if self._is_stopping:
             return False
+        result = False
         async with self.lock_env("setex"):
             try:
-                res = await self._conn.setex(key, expires, self.stringify(data))
-            except aioredis.RedisError:
-                res = False
-        return res
+                result = await self._conn.set(key, self.stringify(data), expires)
+            except aioredis.RedisError as e:
+                self.logger.debug(f"Failed to set {key}", exc_info=e)
+            except Exception as e:
+                self.logger.debug(f"An error occured while trying to set {key}", exc_info=e)
+        return result or False
 
     async def exists(self, key: str) -> bool:
         """Check if a key exist or not on the DB
@@ -406,11 +413,12 @@ class RedisDatabase:
         """
         if self._is_stopping:
             return False
+        res = 0
         async with self.lock_env("exists"):
             try:
                 res = await self._conn.exists(key)
-            except aioredis.RedisError:
-                res = 0
+            except aioredis.RedisError as e:
+                self.logger.debug(f"Failed to check {key}", exc_info=e)
         if res > 0:
             return True
         return False
@@ -425,11 +433,12 @@ class RedisDatabase:
         """
         if self._is_stopping:
             return False
+        res = 0
         async with self.lock_env("rm"):
             try:
                 res = await self._conn.delete(key)
             except aioredis.RedisError:
-                res = 0
+                self.logger.debug(f"Failed to delete {key}")
         if res > 0:
             return True
         return False
