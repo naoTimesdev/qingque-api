@@ -55,7 +55,7 @@ class App(Struct):
     # Cache mihomo data for 5 minutes
     mihomo_ttl: int = field(default=60 * 5)
     # Cache for image, 3 minutes
-    image_ttl: int = field(default=60 * 3)
+    image_ttl: int = field(default=60 * 15)
 
 
 class Settings(Struct):
