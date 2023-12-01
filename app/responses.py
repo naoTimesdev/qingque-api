@@ -24,25 +24,67 @@ SOFTWARE.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 import msgspec
+import orjson
 from blacksheep import Content, Response
 from msgspec import Struct
 
 __all__ = (
     "ErrorResponse",
-    "make_from_struct",
+    "better_json",
+    "better_pretty_json",
 )
 
 
-class ErrorResponse(Struct):
+@dataclass
+class ErrorResponse:
     code: int
     message: str
     data: Any | None = None
 
 
-def make_from_struct(struct: Struct, code: int = 200):
-    encoded = msgspec.json.encode(struct)
+def dumps_json(obj: Any) -> bytes:
+    if isinstance(obj, Struct):
+        return msgspec.json.encode(obj)
+    return orjson.dumps(obj)
 
-    return Response(code, content=Content(b"application/json", encoded))
+
+def pretty_dumps_json(obj: Any) -> bytes:
+    if isinstance(obj, Struct):
+        return msgspec.json.format(msgspec.json.encode(obj), indent=2)
+    return orjson.dumps(obj, option=orjson.OPT_INDENT_2)
+
+
+def better_json(
+    data: Any,
+    status: int = 200,
+) -> Response:
+    """Return a JSON response with the given data and status code."""
+
+    return Response(
+        status,
+        None,
+        Content(
+            b"application/json",
+            dumps_json(data),
+        ),
+    )
+
+
+def better_pretty_json(
+    data: Any,
+    status: int = 200,
+) -> Response:
+    """Return a JSON response with the given data and status code."""
+
+    return Response(
+        status,
+        None,
+        Content(
+            b"application/json",
+            pretty_dumps_json(data),
+        ),
+    )

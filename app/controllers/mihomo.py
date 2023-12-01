@@ -24,13 +24,11 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any
-
 import aiohttp
-from blacksheep import Content, Response, json
+from blacksheep import Content, Response
 from blacksheep.server.controllers import Controller, get
 
+from app.responses import ErrorResponse, better_json
 from app.settings import Settings
 from domain.i18n import QingqueI18n, QingqueLanguage
 from domain.mihomo.client import MihomoAPI
@@ -42,13 +40,6 @@ from domain.starrail.loader import SRSDataLoaderI18n
 from domain.starrail.scoring import RelicScoring
 from domain.transcations import TransactionCacheKind, TransactionMihomo, TransactionsHelper
 from qutils.tooling import get_logger
-
-
-@dataclass
-class ErrorResponse:
-    code: int
-    message: str
-    data: Any | None = None
 
 
 class MihomoCharactersGenerator(Controller):
@@ -109,10 +100,10 @@ class MihomoCharactersGenerator(Controller):
         try:
             q_lang = QingqueLanguage(lang)
         except ValueError:
-            return json(ErrorResponse(400, "Invalid language"), 400)
+            return better_json(ErrorResponse(400, "Invalid language"), 400)
 
         if uid is None and token is None:
-            return json(ErrorResponse(400, "Missing uid or token"), 400)
+            return better_json(ErrorResponse(400, "Missing uid or token"), 400)
 
         cache_meta = self._make_cache_key(character, q_lang, detailed)
         cache_key = TransactionCacheKind.make(
@@ -132,7 +123,7 @@ class MihomoCharactersGenerator(Controller):
                 self.logger.info(f"Found cache for: {token} (with key: {cache_key})")
                 return self._make_response(f"{cached.uid}_IDX{character}.QingqueBot.png", img_cache)
             if cached is None:
-                return json(ErrorResponse(400, "Invalid token provided"), 400)
+                return better_json(ErrorResponse(400, "Invalid token provided"), 403)
             uid = cached.uid
             data = cached.cached
 
@@ -145,15 +136,15 @@ class MihomoCharactersGenerator(Controller):
                 data, _ = await self.mihomo.get_player(uid)
             except aiohttp.ClientResponseError as e:
                 error_ = f"Unable to get Mihomo data for {uid}: {e.message} ({e.status})"
-                return json(ErrorResponse(400, error_), 400)
+                return better_json(ErrorResponse(400, error_), 500)
 
         if data is None:
-            return json(ErrorResponse(400, "Invalid uid"), 400)
+            return better_json(ErrorResponse(400, "Invalid uid"), 404)
 
         try:
             character_sel = data.characters[character - 1]
         except IndexError:
-            return json(ErrorResponse(400, "Invalid character"), 400)
+            return better_json(ErrorResponse(400, "Invalid character"), 400)
 
         filename = f"{uid}_{character_sel.id}_Card{q_lang.name}.Qingque.png"
         mihomo_gen = StarRailMihomoCard(
@@ -231,10 +222,10 @@ class MihomoProfileGenerator(Controller):
         try:
             q_lang = QingqueLanguage(lang)
         except ValueError:
-            return json(ErrorResponse(400, "Invalid language"), 400)
+            return better_json(ErrorResponse(400, "Invalid language"), 400)
 
         if uid is None and token is None:
-            return json(ErrorResponse(400, "Missing uid or token"), 400)
+            return better_json(ErrorResponse(400, "Missing uid or token"), 400)
 
         data: Player | None = None
         if token is not None:
@@ -248,7 +239,7 @@ class MihomoProfileGenerator(Controller):
                 self.logger.info(f"Found cache for: {token}")
                 return self._make_response(f"layerCard{q_lang.name}_{cached.uid}.Qingque.png", img_cache)
             if cached is None:
-                return json(ErrorResponse(400, "Invalid token provided"), 400)
+                return better_json(ErrorResponse(400, "Invalid token provided"), 403)
             uid = cached.uid
             data = cached.cached
 
@@ -261,10 +252,10 @@ class MihomoProfileGenerator(Controller):
                 data, _ = await self.mihomo.get_player(uid)
             except aiohttp.ClientResponseError as e:
                 error_ = f"Unable to get Mihomo data for {uid}: {e.message} ({e.status})"
-                return json(ErrorResponse(400, error_), 400)
+                return better_json(ErrorResponse(400, error_), 500)
 
         if data is None:
-            return json(ErrorResponse(400, "Invalid uid"), 400)
+            return better_json(ErrorResponse(400, "Invalid uid"), 404)
 
         filename = f"PlayerCard{q_lang.name}_{uid}.Qingque.png"
         mihomo_gen = StarRailPlayerCard(

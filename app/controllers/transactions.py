@@ -31,7 +31,7 @@ import aiohttp
 from blacksheep import FromJSON
 from blacksheep.server.controllers import Controller, post
 
-from app.responses import ErrorResponse, make_from_struct
+from app.responses import ErrorResponse, better_json
 from app.settings import Settings
 from domain.hylab.client import HYLabClient
 from domain.hylab.models.errors import HYLabException
@@ -81,7 +81,7 @@ class HoyolabTransactionController(Controller):
             )
         except HYLabException as e:
             error_ = f"Error when testing HoyoLab credentials: {e.msg} ({e.retcode})"
-            return make_from_struct(ErrorResponse(400, error_), code=400)
+            return better_json(ErrorResponse(400, error_), status=400)
 
         transact = TransactionHoyolab(
             uid=value.uid,
@@ -92,7 +92,7 @@ class HoyolabTransactionController(Controller):
         )
         token = await self.transactions.create(transact, ttl=self.settings.app.transaction_ttl)
 
-        return make_from_struct(ErrorResponse(200, "Success", token))
+        return better_json(ErrorResponse(200, "Success", token))
 
 
 class MihomoTransactionController(Controller):
@@ -117,7 +117,7 @@ class MihomoTransactionController(Controller):
             player_data, _ = await self.mihomo.get_player(value.uid)
         except aiohttp.ClientResponseError as e:
             error_ = f"Error when testing Mihomo credentials: {e.message} ({e.status})"
-            return make_from_struct(ErrorResponse(400, error_), code=400)
+            return better_json(ErrorResponse(400, error_), status=400)
 
         transact = TransactionMihomo(
             uid=value.uid,
@@ -125,4 +125,4 @@ class MihomoTransactionController(Controller):
         )
         token = await self.transactions.create(transact, ttl=self.settings.app.mihomo_ttl)
 
-        return make_from_struct(ErrorResponse(200, "Success", token))
+        return better_json(ErrorResponse(200, "Success", token))
