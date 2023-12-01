@@ -42,6 +42,43 @@ from domain.transcations import TransactionCacheKind, TransactionMihomo, Transac
 from qutils.tooling import get_logger
 
 
+class MihomoInfo(Controller):
+    def __init__(
+        self,
+        settings: Settings,
+        mihomo: MihomoAPI,
+        transactions: TransactionsHelper,
+    ) -> None:
+        self.settings = settings
+        self.mihomo = mihomo
+        self.transactions = transactions
+
+        self.logger = get_logger("qingque.controllers.mihomo")
+
+    @classmethod
+    def route(cls) -> str | None:
+        return "/api/mihomo"
+
+    @classmethod
+    def class_name(cls) -> str:
+        return "Info"
+
+    @get()
+    async def get_token_info(
+        self,
+        token: str | None = None,
+    ):
+        if token is None:
+            return better_json(ErrorResponse(400, "Missing uid or token"), 400)
+
+        cached = await self.transactions.get(token, type=TransactionMihomo)
+        if cached is None:
+            return better_json(ErrorResponse(400, "Invalid token provided"), 403)
+        data = cached.cached
+
+        return better_json(data)
+
+
 class MihomoCharactersGenerator(Controller):
     def __init__(
         self,
