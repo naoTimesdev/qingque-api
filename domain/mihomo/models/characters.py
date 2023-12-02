@@ -76,3 +76,28 @@ class Character(MihomoBase, frozen=True):
     """:class:`str`: The portrait image URL of the character."""
     eidolon_icons: list[str] = field(name="rank_icons")
     """:class:`list[str]`: The eidolon icons URL of the character."""
+
+    @classmethod
+    def mock(cls):
+        return cls(
+            id="1201",
+            name="Qingque",
+            rarity=4,
+            level=80,
+            light_cone=LightCone.mock(),
+            relics=[Relic.mock()],
+            relic_sets=[RelicSet.mock()],
+            attributes=[StatsAtrributes.mock()],
+            additions=[StatsAtrributes.mock()],
+            properties=[StatsProperties.mock()],
+            path=Path.mock(),
+            element=Element.mock(),
+            skills=[Skill.mock()],
+            traces=[SkillTrace.mock()],
+            eidolon=6,
+            ascension=6,
+            icon_url="icon/character/1201.png",
+            preview_url="image/character_preview/1201.png",
+            portrait_url="image/character_portrait/1201.png",
+            eidolon_icons=["icon/skill/1201_rank1.png", "icon/skill/1201_rank2.png"],
+        )

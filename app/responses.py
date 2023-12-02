@@ -25,6 +25,7 @@ SOFTWARE.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any
 
 import msgspec
@@ -33,15 +34,34 @@ from blacksheep import Content, Response
 from msgspec import Struct
 
 __all__ = (
+    "ErrorCode",
     "ErrorResponse",
     "better_json",
     "better_pretty_json",
 )
 
 
+class ErrorCode(int, Enum):
+    # General
+    SUCCESS = 0
+    INVALID_LANG = 100
+    MISSING_UID = 101
+    MISSING_TOKEN = 102
+    MISSING_UID_TOKEN = 103
+    # Transactions related
+    TR_INVALID_TOKEN = 1000
+    TR_FAILED_VERIFICATION = 1001
+    # Generator related
+    GEN_FAILURE = 1100
+    # Mihomo related
+    MIHOMO_ERROR = 2000
+    MIHOMO_UID_NOT_FOUND = 2001
+    MIHOMO_INVALID_CHARACTER = 2002
+
+
 @dataclass
 class ErrorResponse:
-    code: int
+    code: ErrorCode
     message: str
     data: Any | None = None
 

@@ -86,6 +86,17 @@ class StatsAtrributes(MihomoBase, frozen=True):
     percent: bool = msgspec_field(default=False)
     """:class:`bool`: Whether the stats is in percent or not."""
 
+    @classmethod
+    def mock(cls):
+        return cls(
+            field=StatsField.HP,
+            name="HP",
+            icon_url="icon/property/IconMaxHP.png",
+            value=846.72,
+            display_value="846",
+            percent=False,
+        )
+
 
 class StatsProperties(MihomoBase, frozen=True):
     type: str
@@ -103,9 +114,35 @@ class StatsProperties(MihomoBase, frozen=True):
     percent: bool = msgspec_field(default=False)
     """:class:`bool`: Whether the stats is in percent or not."""
 
+    @classmethod
+    def mock(cls):
+        return cls(
+            type="QuantumAddedRatio",
+            field=StatsField.QuantumBoost,
+            name="Quantum DMG Boost",
+            icon_url="icon/property/IconQuantumAddedRatio.png",
+            value=0.38880301429889397,
+            display_value="38.8%",
+            percent=True,
+        )
+
 
 class StatsPropertiesAffix(StatsProperties, frozen=True):
     count: int = msgspec_field(default=0)
     """:class:`int`: How many times have this substats have been upgraded."""
     step: int = msgspec_field(default=0)
     """:class:`int`: The additional value of the substats."""
+
+    @classmethod
+    def mock(cls):
+        return cls(
+            type="CriticalDamageBase",
+            field=StatsField.CritDamage,
+            name="CRIT DMG",
+            icon_url="icon/property/IconCriticalDamage.png",
+            value=0.38880301429889397,
+            display_value="38.88%",
+            percent=True,
+            count=5,
+            step=2,
+        )

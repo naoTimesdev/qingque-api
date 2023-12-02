@@ -58,3 +58,20 @@ class LightCone(MihomoBase, frozen=True):
     """:class:`list[StatsAtrributes]`: The base attributes of the light cone."""
     properties: list[StatsProperties]
     """:class:`list[StatsProperties]`: The additional attributes that the light cone gives."""
+
+    @classmethod
+    def mock(cls):
+        return cls(
+            id="110",
+            name="Light Cone",
+            rarity=5,
+            level=80,
+            ascension=6,
+            superimpose=5,
+            icon_url="icon/light_cone/110.png",
+            preview_url="image/light_cone_preview/110.png",
+            portrait_url="https://static.wikia.nocookie.net/gensin-impact/images/3/3f/Weapon_Light_Cone.png",
+            path=Path.mock(),
+            attributes=[StatsAtrributes.mock()],
+            properties=[StatsProperties.mock()],
+        )

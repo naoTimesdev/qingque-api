@@ -135,6 +135,15 @@ class Element(MihomoBase, frozen=True):
     icon_url: str = field(name="icon")
     """:class:`str`: The element icon URL."""
 
+    @classmethod
+    def mock(cls):
+        return cls(
+            id=ElementType.Quantum,
+            name="Quantum",
+            color="#1C29BA",
+            icon_url="icon/element/Quantum.png",
+        )
+
 
 class Path(MihomoBase, frozen=True):
     id: PathType
@@ -143,6 +152,14 @@ class Path(MihomoBase, frozen=True):
     """:class:`str`: The path name."""
     icon_url: str = field(name="icon")
     """:class:`str`: The path icon URL."""
+
+    @classmethod
+    def mock(cls):
+        return cls(
+            id=PathType.Erudition,
+            name="Erudition",
+            icon_url="icon/path/Erudition.png",
+        )
 
 
 class Skill(MihomoBase, frozen=True):
@@ -171,6 +188,23 @@ class Skill(MihomoBase, frozen=True):
     element: Element | None = field(default=None)
     """:class:`SkillElement`: The skill element."""
 
+    @classmethod
+    def mock(cls):
+        return cls(
+            id="10001",
+            name="Mock Skill",
+            level=1,
+            max_level=1,
+            type=SkillUsageType.Basic,
+            type_description="Mock Skill Type",
+            effect=SkillEffectType.Attack,
+            effect_description="Mock Skill Effect",
+            summary="Mock Skill Summary",
+            description="Mock Skill Description",
+            icon_url="icon/skill/10001_bsaic_atk.png",
+            element=Element.mock(),
+        )
+
 
 class SkillTrace(MihomoBase, frozen=True):
     id: str
@@ -185,3 +219,14 @@ class SkillTrace(MihomoBase, frozen=True):
     """:class:`str`: The skill trace icon URL."""
     parent_id: str | None = field(name="parent", default=None)
     """:class:`str`: The skill trace parent ID, if exist it means it is a branch."""
+
+    @classmethod
+    def mock(cls):
+        return cls(
+            id="10001",
+            level=6,
+            max_level=6,
+            anchor_point="Point01",
+            icon_url="icon/skill/10001_basic_atk.png",
+            parent_id=None,
+        )

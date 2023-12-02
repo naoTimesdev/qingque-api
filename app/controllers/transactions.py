@@ -30,8 +30,10 @@ from typing import Optional
 import aiohttp
 from blacksheep import FromJSON
 from blacksheep.server.controllers import Controller, post
+from blacksheep.server.openapi.common import ContentInfo, ResponseExample, ResponseInfo
 
-from app.responses import ErrorResponse, better_json
+from app.docs import docs
+from app.responses import ErrorCode, ErrorResponse, better_json
 from app.settings import Settings
 from domain.hylab.client import HYLabClient
 from domain.hylab.models.errors import HYLabException
@@ -53,22 +55,67 @@ class HYLabTransactInput:
     lmid: Optional[str] = None
 
 
-class HoyolabTransactionController(Controller):
-    def __init__(self, settings: Settings, hylab: HYLabClient, transactions: TransactionsHelper) -> None:
+_token_created_resp = ResponseInfo(
+    "Token created",
+    content=[
+        ContentInfo(
+            ErrorResponse,
+            examples=[
+                ResponseExample(
+                    ErrorResponse(
+                        code=ErrorCode.SUCCESS,
+                        message="Success",
+                        data="abcdefghijklkmnopqrstuvwxyz1234567890",
+                    )
+                )
+            ],
+        )
+    ],
+)
+
+
+def make_docs(transact_type: str):
+    return docs(
+        summary=f"Create a new transactions for {transact_type}",
+        tags=["Transactions"],
+        responses={
+            400: ResponseInfo(
+                f"Failed to verify {transact_type} credentials",
+                content=[
+                    ContentInfo(
+                        ErrorResponse,
+                        examples=[
+                            ResponseExample(
+                                ErrorResponse(
+                                    ErrorCode.TR_FAILED_VERIFICATION,
+                                    f"Error when testing {transact_type} credentials: 401 Unauthorized (401)",
+                                ),
+                            )
+                        ],
+                    )
+                ],
+            ),
+            200: _token_created_resp,
+        },
+    )
+
+
+class Transactions(Controller):
+    def __init__(
+        self, settings: Settings, mihomo: MihomoAPI, hylab: HYLabClient, transactions: TransactionsHelper
+    ) -> None:
         self.settings = settings
+        self.mihomo = mihomo
         self.hylab = hylab
         self.transactions = transactions
 
     @classmethod
     def route(cls) -> str | None:
-        return "/api/exchange/hoyolab"
+        return "/api/exchange"
 
-    @classmethod
-    def class_name(cls) -> str:
-        return "Transaction"
-
-    @post()
-    async def create_transactions(self, data: FromJSON[HYLabTransactInput]):
+    @post("/hoyolab")
+    @make_docs("HoyoLab")
+    async def create_transactions_hoyolab(self, data: FromJSON[HYLabTransactInput]):
         value = data.value
 
         try:
@@ -81,7 +128,7 @@ class HoyolabTransactionController(Controller):
             )
         except HYLabException as e:
             error_ = f"Error when testing HoyoLab credentials: {e.msg} ({e.retcode})"
-            return better_json(ErrorResponse(400, error_), status=400)
+            return better_json(ErrorResponse(ErrorCode.TR_FAILED_VERIFICATION, error_), status=400)
 
         transact = TransactionHoyolab(
             uid=value.uid,
@@ -92,32 +139,18 @@ class HoyolabTransactionController(Controller):
         )
         token = await self.transactions.create(transact, ttl=self.settings.app.transaction_ttl)
 
-        return better_json(ErrorResponse(200, "Success", token))
+        return better_json(ErrorResponse(ErrorCode.SUCCESS, "Success", token))
 
-
-class MihomoTransactionController(Controller):
-    def __init__(self, settings: Settings, mihomo: MihomoAPI, transactions: TransactionsHelper) -> None:
-        self.settings = settings
-        self.mihomo = mihomo
-        self.transactions = transactions
-
-    @classmethod
-    def route(cls) -> str | None:
-        return "/api/exchange/mihomo"
-
-    @classmethod
-    def class_name(cls) -> str:
-        return "Transaction"
-
-    @post()
-    async def create_transactions(self, data: FromJSON[MihomoTransactInput]):
+    @post("/mihomo")
+    @make_docs("Mihomo")
+    async def create_transactions_mihomo(self, data: FromJSON[MihomoTransactInput]):
         value = data.value
 
         try:
             player_data, _ = await self.mihomo.get_player(value.uid)
         except aiohttp.ClientResponseError as e:
             error_ = f"Error when testing Mihomo credentials: {e.message} ({e.status})"
-            return better_json(ErrorResponse(400, error_), status=400)
+            return better_json(ErrorResponse(ErrorCode.TR_FAILED_VERIFICATION, error_), status=400)
 
         transact = TransactionMihomo(
             uid=value.uid,
@@ -125,4 +158,4 @@ class MihomoTransactionController(Controller):
         )
         token = await self.transactions.create(transact, ttl=self.settings.app.mihomo_ttl)
 
-        return better_json(ErrorResponse(200, "Success", token))
+        return better_json(ErrorResponse(ErrorCode.SUCCESS, "Success", token))

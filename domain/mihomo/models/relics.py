@@ -55,6 +55,20 @@ class Relic(MihomoBase, frozen=True):
     sub_stats: list[StatsPropertiesAffix] = field(name="sub_affix")
     """:class:`list[StatsPropertiesAffix]`: The sub stats of the relic."""
 
+    @classmethod
+    def mock(cls):
+        return cls(
+            id="123451",
+            name="Mock Relic",
+            set_id="1234",
+            set_name="Mock Relic Set",
+            rarity=5,
+            level=20,
+            icon_url="icon/relic/12345_0.png",
+            main_stats=StatsProperties.mock(),
+            sub_stats=[StatsPropertiesAffix.mock()],
+        )
+
 
 class RelicSet(MihomoBase, frozen=True):
     """The active relic sets bonus"""
@@ -71,3 +85,14 @@ class RelicSet(MihomoBase, frozen=True):
     """:class:`str`: The description of the relic set bonus."""
     properties: list[StatsProperties]
     """:class:`list[StatsProperties]`: The properties of the relic set bonus."""
+
+    @classmethod
+    def mock(cls):
+        return cls(
+            id="1234",
+            name="Mock Relic Set",
+            icon_url="icon/relic/1234.png",
+            need=4,
+            description="Mock Relic Set Bonus",
+            properties=[StatsProperties.mock()],
+        )

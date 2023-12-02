@@ -70,6 +70,14 @@ class PlayerAvatar(MihomoBase, frozen=True):
     icon_url: str = field(name="icon")
     """:class:`str`: The icon path of the avatar."""
 
+    @classmethod
+    def mock(cls):
+        return cls(
+            id="1",
+            name="Trailblazer",
+            icon_url="icon/avatar/1.png",
+        )
+
 
 class PlayerForgottenHall(MihomoBase, frozen=True):
     finished_floor: int = field(name="chaos_level")
@@ -78,6 +86,14 @@ class PlayerForgottenHall(MihomoBase, frozen=True):
     """:class:`MemoryOfChaosFloor`: The finished floor index of the Memory of Chaos."""
     moc_floor_id: int = field(name="chaos_id")
     """:class:`int`: The floor ID of the Memory of Chaos."""
+
+    @classmethod
+    def mock(cls):
+        return cls(
+            finished_floor=1,
+            moc_finished_floor=1,
+            moc_floor_id=1,
+        )
 
 
 class PlayerProgression(MihomoBase, frozen=True):
@@ -91,6 +107,16 @@ class PlayerProgression(MihomoBase, frozen=True):
     """:class:`int`: The player's Avatar count."""
     achivements: int = field(name="achievement_count")
     """:class:`int`: The player's unlocked Achievement count."""
+
+    @classmethod
+    def mock(cls):
+        return cls(
+            forgotten_hall=PlayerForgottenHall.mock(),
+            simulated_universe=SimulatedUniverse.HertaWorld,
+            light_cones=0,
+            avatars=1,
+            achivements=0,
+        )
 
 
 class PlayerInfo(MihomoBase, frozen=True):
@@ -113,9 +139,30 @@ class PlayerInfo(MihomoBase, frozen=True):
     friend_count: int = field(default=0)
     """:class:`int`: The friend count of the player."""
 
+    @classmethod
+    def mock(cls):
+        return cls(
+            id="000000000",
+            name="Qingque",
+            avatar=PlayerAvatar.mock(),
+            signature="Gambling",
+            display=True,
+            progression=PlayerProgression.mock(),
+            level=60,
+            equilibrium_level=6,
+            friend_count=0,
+        )
+
 
 class Player(MihomoBase, frozen=True):
     player: PlayerInfo
     """:class:`PlayerInfo`: The player information."""
     characters: list[Character] = field(default_factory=list)
     """:class:`list[Character]`: The characters displayed by the player."""
+
+    @classmethod
+    def mock(cls):
+        return cls(
+            player=PlayerInfo.mock(),
+            characters=[Character.mock()],
+        )

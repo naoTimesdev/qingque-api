@@ -24,22 +24,35 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from blacksheep.server.openapi.ui import ReDocUIProvider
-from blacksheep.server.openapi.v3 import OpenAPIHandler
-from openapidocs.v3 import Info
+import essentials.json
+import msgspec
+import orjson
+from msgspec import Struct
+
+from qutils.tooling import get_logger
+
+__all__ = (
+    "run_monkeypatch",
+    "monkeypatch_essentials_friendlyjson",
+)
+logger = get_logger("qingque.api.patcher")
 
 
-def configure_docs():
-    docs = OpenAPIHandler(
-        info=Info(title="Qingque API", version="0.1.0"),
-        anonymous_access=True,
-    )
+def monkeypatch_essentials_friendlyjson():
+    FriendlyEncoder = essentials.json.FriendlyEncoder
 
-    docs.ui_providers.append(ReDocUIProvider("/redocs"))
-    # include only endpoints whose path starts with "/api/"
-    docs.include = lambda path, _: path.startswith("/api/")
+    class FriendlierEncoder(FriendlyEncoder):
+        def default(self, obj):
+            try:
+                return super().default(obj)
+            except TypeError:
+                if isinstance(obj, Struct):
+                    return orjson.loads(msgspec.json.encode(obj))
+                raise
 
-    return docs
+    logger.info("Patching essentials.json.FriendlyEncoder...")
+    essentials.json.FriendlyEncoder = FriendlierEncoder
 
 
-docs = configure_docs()
+def run_monkeypatch():
+    monkeypatch_essentials_friendlyjson()
