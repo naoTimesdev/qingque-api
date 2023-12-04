@@ -55,6 +55,12 @@ class HYLabTransactInput:
     lmid: Optional[str] = None
 
 
+@dataclass
+class TokenExchange:
+    token: str
+    validity: int
+
+
 _token_created_resp = ResponseInfo(
     "Token created",
     content=[
@@ -65,7 +71,10 @@ _token_created_resp = ResponseInfo(
                     ErrorResponse(
                         code=ErrorCode.SUCCESS,
                         message="Success",
-                        data="abcdefghijklkmnopqrstuvwxyz1234567890",
+                        data=TokenExchange(
+                            token="abcdefghijklkmnopqrstuvwxyz1234567890",  # noqa: S106
+                            validity=600,
+                        ),
                     )
                 )
             ],
@@ -139,7 +148,9 @@ class Transactions(Controller):
         )
         token = await self.transactions.create(transact, ttl=self.settings.app.transaction_ttl)
 
-        return better_json(ErrorResponse(ErrorCode.SUCCESS, "Success", token))
+        return better_json(
+            ErrorResponse(ErrorCode.SUCCESS, "Success", TokenExchange(token, self.settings.app.transaction_ttl))
+        )
 
     @post("/mihomo")
     @make_docs("Mihomo")
@@ -158,4 +169,6 @@ class Transactions(Controller):
         )
         token = await self.transactions.create(transact, ttl=self.settings.app.mihomo_ttl)
 
-        return better_json(ErrorResponse(ErrorCode.SUCCESS, "Success", token))
+        return better_json(
+            ErrorResponse(ErrorCode.SUCCESS, "Success", TokenExchange(token, self.settings.app.mihomo_ttl))
+        )
