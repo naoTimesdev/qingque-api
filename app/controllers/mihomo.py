@@ -208,7 +208,7 @@ class Mihomo(Controller):
         try:
             q_lang = QingqueLanguage(lang)
         except ValueError:
-            return better_json(ErrorResponse(ErrorCode.INVALID_LANG, "Invalid language"), 400)
+            return better_json(ErrorResponse(ErrorCode.INVALID_LANG, f"Invalid language: {lang}"), 400)
 
         if uid is None and token is None:
             return better_json(ErrorResponse(ErrorCode.MISSING_UID_TOKEN, "Missing uid or token"), 400)
@@ -292,7 +292,7 @@ class Mihomo(Controller):
         try:
             q_lang = QingqueLanguage(lang)
         except ValueError:
-            return better_json(ErrorResponse(ErrorCode.INVALID_LANG, "Invalid language"), 400)
+            return better_json(ErrorResponse(ErrorCode.INVALID_LANG, f"Invalid language: {lang}"), 400)
 
         if uid is None and token is None:
             return better_json(ErrorResponse(ErrorCode.MISSING_UID_TOKEN, "Missing uid or token"), 400)
