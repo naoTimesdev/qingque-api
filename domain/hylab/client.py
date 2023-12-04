@@ -100,42 +100,48 @@ class HYLabClient:
     async def close(self) -> None:
         await self._client.close()
 
+    def _cleanup_cookies(self, merged_cookies: dict[str, str]):
+        # Remove all None values
+        merged_cookies = {k: v for k, v in merged_cookies.items() if v is not None}
+        # Remove any v1 token if _v2 is present
+        if "ltoken_v2" in merged_cookies:
+            merged_cookies.pop("ltoken", None)
+        if "ltuid_v2" in merged_cookies:
+            merged_cookies.pop("ltuid", None)
+        if "ltmid_v2" in merged_cookies:
+            merged_cookies.pop("ltmid", None)
+        if "cookie_token_v2" in merged_cookies:
+            merged_cookies.pop("cookie_token", None)
+        return merged_cookies
+
     def _merge_cookies(self, child: dict[str, str] | None = None) -> dict[str, str]:
-        ltuid = "ltuid"
         base = {
             "ltuid": str(self._ltuid),
         }
         if self._ltoken.startswith("v2_"):
-            ltuid = "ltuid_v2"
-            base[ltuid] = str(self._ltuid)
             base["ltoken_v2"] = self._ltoken
+            base["ltuid_v2"] = str(self._ltuid)
         else:
             base["ltoken"] = self._ltoken
+
         if child is None:
-            return base
-        ltuid_child = child.get("ltuid", child.get("ltuid_v2", None))
-        ltoken_child = child.get("ltoken", child.get("ltoken_v2", None))
-        use_v2 = False
-        if ltuid_child is not None and ltuid_child != str(self._ltuid) and ltoken_child is None:
-            # Use parent ltuid, and ltoken.
-            base[ltuid] = str(self._ltuid)
-        elif ltuid_child is not None and ltuid_child != str(self._ltuid) and ltoken_child is not None:
-            if ltoken_child.startswith("v2_"):
-                base["ltoken_v2"] = ltoken_child
-                base["ltuid_v2"] = ltuid_child
-                base.pop("ltoken", None)
-                base.pop("ltuid", None)
-                use_v2 = True
-            else:
-                base["ltoken"] = ltoken_child
-                base["ltuid"] = ltuid_child
-        if ltmid_child := child.get("ltmid", child.get("ltmid_v2")):
-            if use_v2:
-                base["ltmid_v2"] = ltmid_child
-            else:
-                base["ltmid"] = ltmid_child
-        base["mi18nLang"] = child.get("mi18nLang", HYLanguage.EN.value)
-        return base
+            return self._cleanup_cookies(base)
+
+        child_cookies = {
+            "ltuid": child.get("ltuid", None),
+            "ltoken": child.get("ltoken", None),
+            "ltmid": child.get("ltmid", None),
+            "ltuid_v2": child.get("ltuid_v2", None),
+            "ltoken_v2": child.get("ltoken_v2", None),
+            "ltmid_v2": child.get("ltmid_v2", None),
+            "cookie_token": child.get("cookie_token", None),
+            "cookie_token_v2": child.get("cookie_token_v2", None),
+        }
+        for child_key, child_data in child_cookies.items():
+            if child_data is not None:
+                base[child_key] = child_data
+
+        return self._cleanup_cookies(base)
 
     @overload
     async def _request(
