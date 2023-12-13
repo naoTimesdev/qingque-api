@@ -32,6 +32,7 @@ from blacksheep.server.controllers import Controller, get
 from msgspec import Struct
 
 from app.docs import docs
+from app.requests import FromXStrictTokenHeader
 from app.responses import ErrorCode, ErrorResponse, better_json
 from app.settings import Settings
 from domain.hylab.client import HYLabClient
@@ -93,12 +94,6 @@ class HoyoLab(Controller):
     @classmethod
     def route(cls) -> str | None:
         return "/api/hoyolab"
-
-    def _strict_mode_allow(self, token: str | None) -> bool:
-        if self.settings.app.strict_mode:
-            if self.settings.app.strict_token and token != self.settings.app.strict_token:
-                return False
-        return True
 
     async def _wrap_hoyo_call(
         self, func, token: str, expect_type: type[HoyoT], *args, **kwargs
@@ -594,3 +589,265 @@ class HoyoLab(Controller):
 
         await self.transactions.set_gen_cache(token, cache_key, results, ttl=self.settings.app.image_ttl)
         return self._make_response(card_filename, results)
+
+    # --> Info part
+
+    def _strict_mode_allow(self, token: str | None) -> bool:
+        if self.settings.app.strict_mode:
+            if self.settings.app.strict_token and token != self.settings.app.strict_token:
+                return False
+        return True
+
+    @get("/info/chronicles")
+    @docs(
+        summary="Get data for chronicles/battle records",
+        description="Get data for chronicles/battle records from Hoyolab data, you would need to exchange token first!",
+        tags=["HoyoLab"],
+    )
+    async def get_info_chronicles(self, token: str, lang: str, x_token: FromXStrictTokenHeader):
+        if not self._strict_mode_allow(x_token.value):
+            return better_json(
+                ErrorResponse(ErrorCode.STRICT_MODE_DISALLOW, "You are not allowed to access this API route!"), 403
+            )
+
+        try:
+            q_lang = QingqueLanguage(lang)
+        except ValueError:
+            return better_json(ErrorResponse(ErrorCode.INVALID_LANG, f"Invalid language: {lang}"), 400)
+
+        cached = await self.transactions.get(token, type=TransactionHoyolab)
+        if cached is None:
+            return better_json(ErrorResponse(ErrorCode.TR_INVALID_TOKEN, "Invalid token provided"), 403)
+
+        self.logger.info(f"Getting profile overview for UID: {cached.uid}")
+        hoyo_overview = await self._wrap_hoyo_call(
+            self.hoyoapi.get_battle_chronicles_overview,
+            token,
+            ChronicleUserOverview,
+            cached.uid,
+            hylab_id=cached.ltuid,
+            hylab_token=cached.ltoken,
+            hylab_mid_token=cached.lmid,
+            lang=HYLanguage(q_lang.value.lower()),
+        )
+
+        if isinstance(hoyo_overview, HYLabException):
+            self.logger.error(f"Error while getting profile overview for UID: {cached.uid}", exc_info=hoyo_overview)
+            default_error = ErrorResponse(
+                ErrorCode.HOYOLAB_ERROR, f"Error while getting profile overview: {hoyo_overview}"
+            )
+            error_data = _ERROR_MAPS.get(type(hoyo_overview), default_error)  # type: ignore
+            return better_json(error_data, 500)
+        if isinstance(hoyo_overview, Exception):
+            error_data = ErrorResponse(ErrorCode.HOYOLAB_ERROR, f"An error occurred: {hoyo_overview}")
+            return better_json(error_data, 500)
+
+        if hoyo_overview is None:
+            self.logger.error(f"Invalid profile overview for UID: {cached.uid}")
+            return better_json(ErrorResponse(ErrorCode.HOYOLAB_ERROR, "Data is unavailable"), 500)
+
+        return better_json(hoyo_overview)
+
+    @get("/info/characters")
+    @docs(
+        summary="Get data for characters",
+        description="Get data for characters from Hoyolab data, you would need to exchange token first!",
+        tags=["HoyoLab"],
+    )
+    async def get_info_characters(self, token: str, lang: str, x_token: FromXStrictTokenHeader):
+        if not self._strict_mode_allow(x_token.value):
+            return better_json(
+                ErrorResponse(ErrorCode.STRICT_MODE_DISALLOW, "You are not allowed to access this API route!"), 403
+            )
+
+        try:
+            q_lang = QingqueLanguage(lang)
+        except ValueError:
+            return better_json(ErrorResponse(ErrorCode.INVALID_LANG, f"Invalid language: {lang}"), 400)
+
+        cached = await self.transactions.get(token, type=TransactionHoyolab)
+        if cached is None:
+            return better_json(ErrorResponse(ErrorCode.TR_INVALID_TOKEN, "Invalid token provided"), 403)
+
+        self.logger.info(f"Getting profile info for UID: {cached.uid}")
+        hoyo_user_info = await self._wrap_hoyo_call(
+            self.hoyoapi.get_battle_chronicles_basic_info,
+            token,
+            ChronicleUserInfo,
+            cached.uid,
+            hylab_id=cached.ltuid,
+            hylab_token=cached.ltoken,
+            hylab_mid_token=cached.lmid,
+            lang=HYLanguage(q_lang.value.lower()),
+        )
+
+        if isinstance(hoyo_user_info, HYLabException):
+            self.logger.error(f"Error while getting profile info for UID: {cached.uid}", exc_info=hoyo_user_info)
+            default_error = ErrorResponse(
+                ErrorCode.HOYOLAB_ERROR, f"Error while getting profile overview: {hoyo_user_info}"
+            )
+            error_data = _ERROR_MAPS.get(type(hoyo_user_info), default_error)  # type: ignore
+            return better_json(error_data, 500)
+        if isinstance(hoyo_user_info, Exception):
+            error_data = ErrorResponse(ErrorCode.HOYOLAB_ERROR, f"An error occurred: {hoyo_user_info}")
+            return better_json(error_data, 500)
+
+        if hoyo_user_info is None:
+            self.logger.error(f"Invalid profile info for UID: {cached.uid}")
+            return better_json(ErrorResponse(ErrorCode.HOYOLAB_ERROR, "Data is unavailable"), 500)
+
+        self.logger.info(f"Getting profile characters for UID: {cached.uid}")
+        hoyo_characters = await self._wrap_hoyo_call(
+            self.hoyoapi.get_battle_chronicles_characters,
+            token,
+            ChronicleCharacters,
+            cached.uid,
+            hylab_id=cached.ltuid,
+            hylab_token=cached.ltoken,
+            hylab_mid_token=cached.lmid,
+        )
+
+        if isinstance(hoyo_characters, HYLabException):
+            self.logger.error(f"Error while getting profile characters for UID: {cached.uid}", exc_info=hoyo_characters)
+            default_error = ErrorResponse(
+                ErrorCode.HOYOLAB_ERROR, f"Error while getting profile characters: {hoyo_characters}"
+            )
+            error_data = _ERROR_MAPS.get(type(hoyo_characters), default_error)  # type: ignore
+            return better_json(error_data, 500)
+        if isinstance(hoyo_characters, Exception):
+            error_data = ErrorResponse(ErrorCode.HOYOLAB_ERROR, f"An error occurred: {hoyo_characters}")
+            return better_json(error_data, 500)
+
+        if hoyo_characters is None:
+            self.logger.error(f"Invalid profile characters for UID: {cached.uid}")
+            return better_json(
+                ErrorResponse(ErrorCode.HOYOLAB_ERROR, "Data is unavailable (profile characters is unavailable)"), 500
+            )
+
+        return better_json(
+            {
+                "info": hoyo_user_info,
+                "characters": hoyo_characters,
+            }
+        )
+
+    @get("/info/simuniverse/{str:kind}")
+    @docs(
+        summary="Get data for simulated universe",
+        description="Get data for simulated universe from Hoyolab data, you would need to exchange token first!",
+        tags=["HoyoLab"],
+    )
+    async def get_info_simuniverse(self, kind: str, token: str, lang: str, x_token: FromXStrictTokenHeader):
+        if not self._strict_mode_allow(x_token.value):
+            return better_json(
+                ErrorResponse(ErrorCode.STRICT_MODE_DISALLOW, "You are not allowed to access this API route!"), 403
+            )
+
+        try:
+            q_lang = QingqueLanguage(lang)
+        except ValueError:
+            return better_json(ErrorResponse(ErrorCode.INVALID_LANG, f"Invalid language: {lang}"), 400)
+
+        try:
+            q_kind = HYSimUniverseKind(kind)
+        except ValueError:
+            return better_json(
+                ErrorResponse(
+                    ErrorCode.HOYOLAB_SIMU_UNKNOWN_KIND, f"Invalid kind: {kind} (must be: current/previous/swarm)"
+                ),
+                400,
+            )
+
+        cached = await self.transactions.get(token, type=TransactionHoyolab)
+        if cached is None:
+            return better_json(ErrorResponse(ErrorCode.TR_INVALID_TOKEN, "Invalid token provided"), 403)
+
+        if q_kind is HYSimUniverseKind.SwarmDisaster:
+            self.logger.info(f"Getting simulated universe swarm disaster for UID: {cached.uid}")
+            hoyo_simuniverse = await self._fetch_simulated_universe(
+                self.hoyoapi.get_battle_chronicles_simulated_universe_swarm_dlc,
+                token=token,
+                transact=cached,
+                q_lang=q_lang,
+            )
+        else:
+            self.logger.info(f"Getting simulated universe for UID: {cached.uid}")
+            hoyo_simuniverse = await self._fetch_simulated_universe(
+                self.hoyoapi.get_battle_chronicles_simulated_universe,
+                token=token,
+                transact=cached,
+                q_lang=q_lang,
+            )
+
+        if isinstance(hoyo_simuniverse, Response):
+            return hoyo_simuniverse
+        hoyo_simuniverse = cast(
+            ChronicleSimulatedUniverse | ChronicleSimulatedUniverseSwarmDLC | None, hoyo_simuniverse
+        )
+        if hoyo_simuniverse is None:
+            self.logger.error(f"Invalid profile info for UID: {cached.uid}")
+            return better_json(ErrorResponse(ErrorCode.HOYOLAB_ERROR, "Data is unavailable"), 500)
+
+        return better_json(hoyo_simuniverse)
+
+    @get("/info/moc/{str:kind}")
+    @docs(
+        summary="Get data for memory of chaos",
+        description="Get data for memory of chaos from Hoyolab data, you would need to exchange token first!",
+        tags=["HoyoLab"],
+    )
+    async def get_info_moc(self, kind: str, token: str, lang: str, x_token: FromXStrictTokenHeader):
+        if not self._strict_mode_allow(x_token.value):
+            return better_json(
+                ErrorResponse(ErrorCode.STRICT_MODE_DISALLOW, "You are not allowed to access this API route!"), 403
+            )
+
+        try:
+            q_lang = QingqueLanguage(lang)
+        except ValueError:
+            return better_json(ErrorResponse(ErrorCode.INVALID_LANG, f"Invalid language: {lang}"), 400)
+
+        try:
+            q_kind = HYMoCKind(kind)
+        except ValueError:
+            return better_json(
+                ErrorResponse(ErrorCode.HOYOLAB_SIMU_UNKNOWN_KIND, f"Invalid kind: {kind} (must be: current/previous)"),
+                400,
+            )
+
+        cached = await self.transactions.get(token, type=TransactionHoyolab)
+        if cached is None:
+            return better_json(ErrorResponse(ErrorCode.TR_INVALID_TOKEN, "Invalid token provided"), 403)
+
+        self.logger.info(f"Getting profile forgotten hall for UID: {cached.uid} ({q_kind.value} state)")
+        hoyo_moc = await self._wrap_hoyo_call(
+            self.hoyoapi.get_battle_chronicles_forgotten_hall,
+            token,
+            ChronicleForgottenHall,
+            cached.uid,
+            previous=q_kind is HYMoCKind.Previous,
+            hylab_id=cached.ltuid,
+            hylab_token=cached.ltoken,
+            hylab_mid_token=cached.lmid,
+            lang=HYLanguage(q_lang.value.lower()),
+        )
+
+        if isinstance(hoyo_moc, HYLabException):
+            self.logger.error(
+                f"Error while getting profile forgotten hall ({q_kind.value}) for UID: {cached.uid}", exc_info=hoyo_moc
+            )
+            default_error = ErrorResponse(
+                ErrorCode.HOYOLAB_ERROR, f"Error while getting profile forgotten hall ({q_kind.value}): {hoyo_moc}"
+            )
+            error_data = _ERROR_MAPS.get(type(hoyo_moc), default_error)  # type: ignore
+            return better_json(error_data, 500)
+        if isinstance(hoyo_moc, Exception):
+            error_data = ErrorResponse(ErrorCode.HOYOLAB_ERROR, f"An error occurred: {hoyo_moc}")
+            return better_json(error_data, 500)
+
+        hoyo_moc = cast(ChronicleForgottenHall | None, hoyo_moc)
+        if hoyo_moc is None:
+            self.logger.error(f"Invalid profile characters for UID: {cached.uid}")
+            return better_json(ErrorResponse(ErrorCode.HOYOLAB_ERROR, "Data is unavailable"), 500)
+
+        return better_json(hoyo_moc)
