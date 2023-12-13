@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 import msgspec
 import orjson
@@ -40,6 +40,8 @@ __all__ = (
     "better_pretty_json",
 )
 
+Data = TypeVar("Data")
+
 
 class ErrorCode(int, Enum):
     # General
@@ -48,6 +50,7 @@ class ErrorCode(int, Enum):
     MISSING_UID = 101
     MISSING_TOKEN = 102
     MISSING_UID_TOKEN = 103
+    INVALID_INDEX = 104
     # Transactions related
     TR_INVALID_TOKEN = 1000
     TR_FAILED_VERIFICATION = 1001
@@ -57,13 +60,22 @@ class ErrorCode(int, Enum):
     MIHOMO_ERROR = 2000
     MIHOMO_UID_NOT_FOUND = 2001
     MIHOMO_INVALID_CHARACTER = 2002
+    # HoyoLab related
+    HOYOLAB_ERROR = 2100
+    HOYOLAB_FETCH_ERROR = 2101
+    HOYOLAB_ACCOUNT_NOT_FOUND = 2102
+    HOYOLAB_DATA_NOT_PUBLIC = 2103
+    HOYOLAB_INVALID_COOKIES = 2104
+    HOYOLAB_SIMU_UNKNOWN_KIND = 2105
+    HOYOLAB_SIMU_NO_RECORDS = 2106
+    HOYOLAB_SIMU_INVALID_INDEX = 2107
 
 
 @dataclass
-class ErrorResponse:
+class ErrorResponse(Generic[Data]):
     code: ErrorCode
     message: str
-    data: Any | None = None
+    data: Data | None = None
 
 
 def dumps_json(obj: Any) -> bytes:
