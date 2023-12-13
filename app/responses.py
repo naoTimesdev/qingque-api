@@ -51,6 +51,7 @@ class ErrorCode(int, Enum):
     MISSING_TOKEN = 102
     MISSING_UID_TOKEN = 103
     INVALID_INDEX = 104
+    STRICT_MODE_DISALLOW = 105
     # Transactions related
     TR_INVALID_TOKEN = 1000
     TR_FAILED_VERIFICATION = 1001
@@ -78,16 +79,22 @@ class ErrorResponse(Generic[Data]):
     data: Data | None = None
 
 
+def orjson_default_dumps(obj: Any) -> str:
+    if isinstance(obj, Struct):
+        return orjson.loads(msgspec.json.encode(obj))
+    raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+
+
 def dumps_json(obj: Any) -> bytes:
     if isinstance(obj, Struct):
         return msgspec.json.encode(obj)
-    return orjson.dumps(obj)
+    return orjson.dumps(obj, default=orjson_default_dumps)
 
 
 def pretty_dumps_json(obj: Any) -> bytes:
     if isinstance(obj, Struct):
         return msgspec.json.format(msgspec.json.encode(obj), indent=2)
-    return orjson.dumps(obj, option=orjson.OPT_INDENT_2)
+    return orjson.dumps(obj, option=orjson.OPT_INDENT_2, default=orjson_default_dumps)
 
 
 def better_json(
