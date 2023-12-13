@@ -102,3 +102,6 @@ venv.bak/
 
 settings.toml
 logs/
+
+*.sh
+*.bat
