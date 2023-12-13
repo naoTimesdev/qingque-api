@@ -24,6 +24,8 @@ SOFTWARE.
 
 from __future__ import annotations
 
+from typing import cast
+
 from blacksheep import Application, get
 from rodi import Container
 
@@ -31,7 +33,7 @@ from app.docs import docs
 from app.errors import configure_error_handlers
 from app.patcher import run_monkeypatch
 from app.responses import ErrorCode, ErrorResponse, better_json
-from app.services import configure_services
+from app.services import setup_services
 from app.settings import Settings, load_settings
 from domain.starrail.caching import StarRailImageCache
 from domain.starrail.loader import SRSDataLoaderI18n
@@ -42,20 +44,22 @@ setup_logger(ROOT_DIR / "logs" / "app.log")
 logger = get_logger("qingque.api.main")
 
 
-def configure_application(
-    services: Container,
-    settings: Settings,
-) -> Application:
+def configure_application(settings: Settings) -> Application:
     run_monkeypatch()
 
     if settings.app.strict_mode and not settings.app.strict_token:
         logger.warning("Strict mode is enabled but strict token is not set, disabling strict mode")
 
-    app = Application(services=services, show_error_details=settings.app.show_error_details)
+    app = Application(show_error_details=settings.app.show_error_details)
+    cast(Container, app.services).add_instance(settings)
 
     configure_error_handlers(app)
     docs.bind_app(app)
     return app
+
+
+async def on_load_everything(app: Application):
+    await setup_services(app, app.services.resolve(Settings))
 
 
 async def dispose_cache_and_everything(app: Application):
@@ -72,7 +76,8 @@ async def dispose_cache_and_everything(app: Application):
     srs_i18n.clear()
 
 
-app = configure_application(*configure_services(load_settings()))
+app = configure_application(load_settings())
+app.on_start += on_load_everything
 app.on_stop += dispose_cache_and_everything
 
 

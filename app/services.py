@@ -25,7 +25,9 @@ SOFTWARE.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
+from blacksheep import Application
 from rodi import Container
 
 from app.settings import Settings
@@ -93,10 +95,8 @@ def _load_srs_data() -> SRSDataLoaderI18n:
     return data_loader
 
 
-def configure_services(settings: Settings) -> tuple[Container, Settings]:
+async def setup_services(app: Application, settings: Settings) -> None:
     i18n_path = ROOT_DIR / "i18n"
-
-    container = Container()
 
     logger.info("Configuring services...")
     i18n = QingqueI18n(i18n_path)
@@ -112,14 +112,11 @@ def configure_services(settings: Settings) -> tuple[Container, Settings]:
     relic_scores = RelicScoring(Path(ROOT_DIR / "assets" / "relic_scores.json"))
     relic_scores.load()
 
-    container.add_instance(settings)
-    container.add_instance(i18n)
-    container.add_instance(mihomo)
-    container.add_instance(hylab)
-    container.add_instance(redis)
-    container.add_instance(transactions)
-    container.add_instance(srs_cache)
-    container.add_instance(srs_i18n)
-    container.add_instance(relic_scores)
-
-    return container, settings
+    cast(Container, app.services).add_instance(i18n)
+    cast(Container, app.services).add_instance(mihomo)
+    cast(Container, app.services).add_instance(hylab)
+    cast(Container, app.services).add_instance(redis)
+    cast(Container, app.services).add_instance(transactions)
+    cast(Container, app.services).add_instance(srs_cache)
+    cast(Container, app.services).add_instance(srs_i18n)
+    cast(Container, app.services).add_instance(relic_scores)
