@@ -38,6 +38,7 @@ from domain.starrail.loader import SRSDataLoaderI18n
 from domain.starrail.scoring import RelicScoring
 from qutils.tooling import ROOT_DIR, get_logger, setup_logger
 
+setup_logger(ROOT_DIR / "logs" / "app.log")
 logger = get_logger("qingque.api.main")
 
 
@@ -45,7 +46,6 @@ def configure_application(
     services: Container,
     settings: Settings,
 ) -> Application:
-    setup_logger(ROOT_DIR / "logs" / "app.log")
     run_monkeypatch()
 
     if settings.app.strict_mode and not settings.app.strict_token:
