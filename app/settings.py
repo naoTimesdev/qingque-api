@@ -57,6 +57,13 @@ class App(Struct):
     # Cache for image, 3 minutes
     image_ttl: int = field(default=60 * 15)
 
+    strict_token: str | None = field(default=None)
+    # Strict mode would disable fetching the info related endpoint that return
+    # JSON data, and would need the user to pass X-Strict-Token header
+    # to access the endpoint, if the token is None, then the strict mode
+    # would be automatically disabled.
+    strict_mode: bool = field(default=False)
+
 
 class Settings(Struct):
     app: App

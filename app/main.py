@@ -48,6 +48,9 @@ def configure_application(
     setup_logger(ROOT_DIR / "logs" / "app.log")
     run_monkeypatch()
 
+    if settings.app.strict_mode and not settings.app.strict_token:
+        logger.warning("Strict mode is enabled but strict token is not set, disabling strict mode")
+
     app = Application(services=services, show_error_details=settings.app.show_error_details)
 
     configure_error_handlers(app)
