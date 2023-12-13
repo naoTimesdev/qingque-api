@@ -93,6 +93,10 @@ class TransactionsHelper:
     def __init__(self, *, redis: RedisDatabase) -> None:
         self._redis = redis
 
+    @property
+    def redis(self) -> RedisDatabase:
+        return self._redis
+
     async def get(self, token: str, *, type: type[TransT]) -> TransT | None:
         """Get a transaction from the database."""
         data = await self._redis.get(f"{self.KEY}:{token}", type=type)

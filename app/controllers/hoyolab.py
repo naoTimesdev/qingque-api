@@ -25,7 +25,7 @@ SOFTWARE.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, TypeVar, cast
+from typing import TypeVar, cast
 
 from blacksheep import Content, Response
 from blacksheep.server.controllers import Controller, get
@@ -94,9 +94,34 @@ class HoyoLab(Controller):
     def route(cls) -> str | None:
         return "/api/hoyolab"
 
-    async def _wrap_hoyo_call(self, func, *args, **kwargs) -> Any | HYLabException | Exception:
+    def _strict_mode_allow(self, token: str | None) -> bool:
+        if self.settings.app.strict_mode:
+            if self.settings.app.strict_token and token != self.settings.app.strict_token:
+                return False
+        return True
+
+    async def _wrap_hoyo_call(
+        self, func, token: str, expect_type: type[HoyoT], *args, **kwargs
+    ) -> HoyoT | HYLabException | Exception | None:
+        # Check if we have cache
+        # Get func name
+        func_name = func.__name__
+        # Convert all args to string, separated by comma
+        args_str = ",".join([str(arg) for arg in args])
+        # Convert all kwargs to key=value, separated by comma
+        kwargs_str = ",".join([f"{key}={value}" for key, value in kwargs.items()])
+        # Make a cache key
+        cache_key = f"qingque::hoyolabcache::{token}::{func_name}::args:{args_str}::kwargs:{kwargs_str}"
+        # Check if exist
+        cached = await self.transactions.redis.get(cache_key, type=expect_type)
+        if cached is not None:
+            # Return cached data
+            return cached
         try:
-            return await func(*args, **kwargs)
+            result = await func(*args, **kwargs)
+            # Set cache
+            await self.transactions.redis.setex(key=cache_key, data=result, expires=60)
+            return result
         except (HYDataNotPublic, HYAccountNotFound, HYInvalidCookies) as hye:
             return hye
         except Exception as e:
@@ -148,6 +173,8 @@ class HoyoLab(Controller):
         self.logger.info(f"Getting profile overview for UID: {cached.uid}")
         hoyo_overview = await self._wrap_hoyo_call(
             self.hoyoapi.get_battle_chronicles_overview,
+            token,
+            ChronicleUserOverview,
             cached.uid,
             hylab_id=cached.ltuid,
             hylab_token=cached.ltoken,
@@ -165,7 +192,7 @@ class HoyoLab(Controller):
             error_data = ErrorResponse(ErrorCode.HOYOLAB_ERROR, f"An error occurred: {hoyo_overview}")
             return better_json(error_data, 500)
 
-        hoyo_overview = cast(ChronicleUserOverview | None, hoyo_overview)
+        # hoyo_overview = cast(ChronicleUserOverview | None, hoyo_overview)
         if hoyo_overview is None:
             self.logger.error(f"Invalid profile overview for UID: {cached.uid}")
             return better_json(ErrorResponse(ErrorCode.HOYOLAB_ERROR, "Data is unavailable"), 500)
@@ -179,6 +206,8 @@ class HoyoLab(Controller):
         self.logger.info(f"Getting profile real-time notes for UID: {cached.uid}")
         hoyo_notes = await self._wrap_hoyo_call(
             self.hoyoapi.get_battle_chronicles_notes,
+            token,
+            ChronicleNotes,
             cached.uid,
             hylab_id=cached.ltuid,
             hylab_token=cached.ltoken,
@@ -194,7 +223,6 @@ class HoyoLab(Controller):
             error_data = ErrorResponse(ErrorCode.HOYOLAB_ERROR, f"An error occurred: {hoyo_notes}")
             return better_json(error_data, 500)
 
-        hoyo_notes = cast(ChronicleNotes | None, hoyo_notes)
         if hoyo_notes is None:
             self.logger.error(f"Invalid real-time notes for UID: {cached.uid}")
             return better_json(
@@ -247,6 +275,8 @@ class HoyoLab(Controller):
         self.logger.info(f"Getting profile info for UID: {cached.uid}")
         hoyo_user_info = await self._wrap_hoyo_call(
             self.hoyoapi.get_battle_chronicles_basic_info,
+            token,
+            ChronicleUserInfo,
             cached.uid,
             hylab_id=cached.ltuid,
             hylab_token=cached.ltoken,
@@ -264,7 +294,6 @@ class HoyoLab(Controller):
             error_data = ErrorResponse(ErrorCode.HOYOLAB_ERROR, f"An error occurred: {hoyo_user_info}")
             return better_json(error_data, 500)
 
-        hoyo_user_info = cast(ChronicleUserInfo | None, hoyo_user_info)
         if hoyo_user_info is None:
             self.logger.error(f"Invalid profile info for UID: {cached.uid}")
             return better_json(ErrorResponse(ErrorCode.HOYOLAB_ERROR, "Data is unavailable"), 500)
@@ -272,6 +301,8 @@ class HoyoLab(Controller):
         self.logger.info(f"Getting profile characters for UID: {cached.uid}")
         hoyo_characters = await self._wrap_hoyo_call(
             self.hoyoapi.get_battle_chronicles_characters,
+            token,
+            ChronicleCharacters,
             cached.uid,
             hylab_id=cached.ltuid,
             hylab_token=cached.ltoken,
@@ -289,7 +320,6 @@ class HoyoLab(Controller):
             error_data = ErrorResponse(ErrorCode.HOYOLAB_ERROR, f"An error occurred: {hoyo_characters}")
             return better_json(error_data, 500)
 
-        hoyo_characters = cast(ChronicleCharacters | None, hoyo_characters)
         if hoyo_characters is None:
             self.logger.error(f"Invalid profile characters for UID: {cached.uid}")
             return better_json(
@@ -313,10 +343,16 @@ class HoyoLab(Controller):
         return self._make_response(card_filename, results)
 
     async def _fetch_simulated_universe(
-        self, func, transact: TransactionHoyolab, q_lang: QingqueLanguage
+        self, func, token: str, transact: TransactionHoyolab, q_lang: QingqueLanguage
     ) -> Response | ChronicleSimulatedUniverse | ChronicleSimulatedUniverseSwarmDLC:
+        func_name: str = func.__name__
+        expect_type = (
+            ChronicleSimulatedUniverseSwarmDLC if func_name.endswith("swarm_dlc") else ChronicleSimulatedUniverse
+        )
         hoyo_simuniverse = await self._wrap_hoyo_call(
             func,
+            token,
+            expect_type,
             transact.uid,
             hylab_id=transact.ltuid,
             hylab_token=transact.ltoken,
@@ -397,6 +433,7 @@ class HoyoLab(Controller):
             self.logger.info(f"Getting simulated universe swarm disaster for UID: {cached.uid}")
             hoyo_simuniverse = await self._fetch_simulated_universe(
                 self.hoyoapi.get_battle_chronicles_simulated_universe_swarm_dlc,
+                token=token,
                 transact=cached,
                 q_lang=q_lang,
             )
@@ -418,6 +455,7 @@ class HoyoLab(Controller):
             self.logger.info(f"Getting simulated universe for UID: {cached.uid}")
             hoyo_simuniverse = await self._fetch_simulated_universe(
                 self.hoyoapi.get_battle_chronicles_simulated_universe,
+                token=token,
                 transact=cached,
                 q_lang=q_lang,
             )
@@ -500,6 +538,8 @@ class HoyoLab(Controller):
         self.logger.info(f"Getting profile forgotten hall for UID: {cached.uid} ({q_kind.value} state)")
         hoyo_moc = await self._wrap_hoyo_call(
             self.hoyoapi.get_battle_chronicles_forgotten_hall,
+            token,
+            ChronicleForgottenHall,
             cached.uid,
             previous=q_kind is HYMoCKind.Previous,
             hylab_id=cached.ltuid,
