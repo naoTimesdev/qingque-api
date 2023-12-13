@@ -28,7 +28,7 @@ from enum import Enum
 from typing import TypeVar, cast
 
 from blacksheep import Content, Response
-from blacksheep.server.controllers import Controller, get
+from blacksheep.server.controllers import Controller, get, head
 from msgspec import Struct
 
 from app.docs import docs
@@ -138,6 +138,34 @@ class HoyoLab(Controller):
                 b"image/png",
                 data=data,
             ),
+        )
+
+    @head("/chronicles.png")
+    @docs(ignored=True)
+    async def head_chronicles_card(self):
+        return Response(
+            200, headers=[(b"Cache-Control", b"max-age=300, must-revalidate"), (b"Content-Type", b"image/png")]
+        )
+
+    @head("/characters.png")
+    @docs(ignored=True)
+    async def head_characters_card(self):
+        return Response(
+            200, headers=[(b"Cache-Control", b"max-age=300, must-revalidate"), (b"Content-Type", b"image/png")]
+        )
+
+    @head("/simuniverse/{str:kind}/{int:index}.png")
+    @docs(ignored=True)
+    async def head_simulated_universe_card(self):
+        return Response(
+            200, headers=[(b"Cache-Control", b"max-age=300, must-revalidate"), (b"Content-Type", b"image/png")]
+        )
+
+    @head("/moc/{str:kind}/{int:floor}.png")
+    @docs(ignored=True)
+    async def head_moc_card(self):
+        return Response(
+            200, headers=[(b"Cache-Control", b"max-age=300, must-revalidate"), (b"Content-Type", b"image/png")]
         )
 
     @get("/chronicles.png")

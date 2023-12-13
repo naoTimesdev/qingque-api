@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import aiohttp
 from blacksheep import Content, Response
-from blacksheep.server.controllers import Controller, get
+from blacksheep.server.controllers import Controller, get, head
 from blacksheep.server.openapi.common import ContentInfo, ResponseExample, ResponseInfo, ResponseStatusType
 
 from app.docs import docs
@@ -189,6 +189,20 @@ class Mihomo(Controller):
         data = cached.cached
 
         return better_json(data)
+
+    @head("/profile.png")
+    @docs(ignored=True)
+    async def head_profile_card(self):
+        return Response(
+            200, headers=[(b"Cache-Control", b"max-age=300, must-revalidate"), (b"Content-Type", b"image/png")]
+        )
+
+    @head("/player.png")
+    @docs(ignored=True)
+    async def head_player_card(self):
+        return Response(
+            200, headers=[(b"Cache-Control", b"max-age=600, must-revalidate"), (b"Content-Type", b"image/png")]
+        )
 
     @get("/profile.png")
     @docs(
