@@ -140,7 +140,7 @@ class HoyoLab(Controller):
             ),
         )
 
-    @get("/chronicles")
+    @get("/chronicles.png")
     @docs(
         summary="Create a overview card for a user",
         description="Generate a overview card for a user from Hoyolab data, you would need to exchange token first!",
@@ -240,7 +240,7 @@ class HoyoLab(Controller):
         await self.transactions.set_gen_cache(token, cache_key, results, ttl=self.settings.app.image_ttl)
         return self._make_response(card_filename, results)
 
-    @get("/characters")
+    @get("/characters.png")
     @docs(
         summary="Create a characters list card for a user",
         description=(
@@ -375,7 +375,7 @@ class HoyoLab(Controller):
             return better_json(ErrorResponse(ErrorCode.HOYOLAB_ERROR, "Data is unavailable"), 500)
         return hoyo_simuniverse
 
-    @get("/simuniverse/{str:kind}/{int:index}")
+    @get("/simuniverse/{str:kind}/{int:index}.png")
     @docs(
         summary="Create a simulated universe card for a user",
         description=(
@@ -486,7 +486,7 @@ class HoyoLab(Controller):
         await self.transactions.set_gen_cache(token, cache_key, results, ttl=self.settings.app.image_ttl)
         return self._make_response(card_filename, results)
 
-    @get("/moc/{str:kind}/{int:floor}")
+    @get("/moc/{str:kind}/{int:floor}.png")
     @docs(
         summary="Create a memory of chaos card for a user",
         description=(

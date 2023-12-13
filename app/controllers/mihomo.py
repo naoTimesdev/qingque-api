@@ -190,7 +190,7 @@ class Mihomo(Controller):
 
         return better_json(data)
 
-    @get("/profile")
+    @get("/profile.png")
     @docs(
         summary="Create a Mihomo character profile card",
         description="Generate a Mihomo character profile card either from provided token or provided UID.",
@@ -276,7 +276,7 @@ class Mihomo(Controller):
         # Results is PNG bytes
         return self._make_response(filename, results)
 
-    @get("/player")
+    @get("/player.png")
     @docs(
         summary="Create a Mihomo player card",
         description="Generate a Mihomo player card either from provided token or provided UID.",
