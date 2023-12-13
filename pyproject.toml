@@ -9,7 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 blacksheep = {extras = ["full"], version = "^2.0.0"}
-uvicorn = "^0.24.0.post1"
+uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 essentials-configuration = {extras = ["full"], version = "^2.0.3"}
 MarkupSafe = "2.1.3"
 aiopath = "0.6.11"
