@@ -73,7 +73,7 @@ class AsyncImageEnhance:
         """
 
         self._enhancer: _SyncEnhance = subclass(image)
-        self._loop: asyncio.AbstractEventLoop = loop or asyncio.get_running_loop()
+        self._loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
 
     async def enhance(self, factor: float) -> Image.Image:
         """Asynchronously enhance the image.
@@ -145,7 +145,7 @@ class AsyncImageFilter:
         if not isinstance(subclass, _SyncFilter):
             raise TypeError(f"{subclass.__class__.__name__} must be a subclass of PIL.ImageFilter.Filter.")
         # Check if the subclass has the filter method.
-        self._loop: asyncio.AbstractEventLoop = loop or asyncio.get_running_loop()
+        self._loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
 
     async def filter(self, image: Image.Image) -> Image.Image:
         """Asynchronously filter the image.

@@ -41,7 +41,7 @@ CACHE_IMG_PATH: Final[str] = "_wrapped_path_"
 class StarRailImageCache:
     def __init__(self, *, loop: asyncio.AbstractEventLoop | None = None) -> None:
         self._cache: dict[str, Image.Image] = {}
-        self._loop = loop or asyncio.get_running_loop()
+        self._loop = loop or asyncio.get_event_loop()
 
     async def get(self, path: AsyncPath) -> Image.Image:
         """Open an image asynchronously.
@@ -73,7 +73,7 @@ class StarRailImageCache:
         io.write(read_data)
         io.seek(0)
 
-        loop = asyncio.get_running_loop()
+        loop = asyncio.get_event_loop()
 
         # Open as RGBA
         as_img = await loop.run_in_executor(None, Image.open, io)
@@ -125,7 +125,7 @@ class StarRailImageCache:
     async def clear(self) -> None:
         """Close all the images."""
 
-        loop = asyncio.get_running_loop()
+        loop = asyncio.get_event_loop()
         for img in self._cache.values():
             # Close
             await loop.run_in_executor(None, img.close)
@@ -148,7 +148,7 @@ class StarRailImageCache:
                 pass
             gc.collect()
 
-        loop = asyncio.get_running_loop()
+        loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, canvas.close)
         del canvas
         gc.collect()

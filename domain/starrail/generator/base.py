@@ -151,7 +151,7 @@ class StarRailDrawing:
         elif isinstance(language, QingqueLanguage):
             language = language.to_mihomo()
         self._language: MihomoLanguage = language if isinstance(language, MihomoLanguage) else language.mihomo
-        self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
+        self._loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
         if isinstance(language, QingqueLanguage):
             self._i18n = i18n.copy(language)
         else:
