@@ -152,7 +152,7 @@ def setup_logger(log_path: Path | None = None) -> logging.Logger:
         logging.basicConfig(
             level=logging.DEBUG,
             handlers=[file_handler],
-            format="[%(asctime)s] - (%(name)s)[%(levelname)s](%(funcName)s): %(message)s",
+            format="[%(process)d] | [%(asctime)s] - (%(name)s)[%(levelname)s](%(funcName)s): %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
         # Remove the rolling file handler from the root logger, will be added back with proper formatting
