@@ -297,11 +297,12 @@ class Mihomo(Controller):
         if uid is None and token is None:
             return better_json(ErrorResponse(ErrorCode.MISSING_UID_TOKEN, "Missing uid or token"), 400)
 
+        cache_key = TransactionCacheKind.make(TransactionCacheKind.MIHOMO_PLAYER, q_lang.name)
         data: Player | None = None
         if token is not None:
             self.logger.info(f"Checking cache for: {token}")
             cached = await self.transactions.get(token, type=TransactionMihomo)
-            img_cache = await self.transactions.get_gen_cache(token, cache_type=TransactionCacheKind.MIHOMO_PLAYER)
+            img_cache = await self.transactions.get_gen_cache(token, cache_type=cache_key)
             if cached is None and img_cache is not None:
                 self.logger.info(f"Found cache for: {token}")
                 return self._make_response(f"PlayerCard{q_lang.name}_{token}.Qingque.png", img_cache)
@@ -341,13 +342,8 @@ class Mihomo(Controller):
         results = await mihomo_gen.create(clear_cache=False)
 
         if token is not None:
-            self.logger.info(f"Setting cache for: {token} {TransactionCacheKind.MIHOMO_PLAYER}")
-            await self.transactions.set_gen_cache(
-                token,
-                TransactionCacheKind.MIHOMO_PLAYER,
-                results,
-                ttl=self.settings.app.image_ttl,
-            )
+            self.logger.info(f"Setting cache for: {token} ({cache_key})")
+            await self.transactions.set_gen_cache(token, cache_key, results, ttl=self.settings.app.image_ttl)
 
         # Cache response for 10 minutes
         # Results is PNG bytes
